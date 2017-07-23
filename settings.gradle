@@ -1,0 +1,2 @@
+rootProject.name = 'datadozer'
+include "core"
