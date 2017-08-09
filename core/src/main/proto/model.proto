@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.datadozer.grpc";
+option java_outer_classname = "DataDozerService";
+option objc_class_prefix = "HLW";
+
+package helloworld;
+
+// The greeting service definition.
+service Greeter {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+}
+
+// Represents an operational message returned from the operation. This can be used to
+// represent both success and failure messages.
+message OperationMessage {
+    // The actual message returned by the operation.
+    string message = 1;
+
+    // Operation Code associated with the message.
+    string operation_code = 2;
+}
+
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+  string message = 1;
+}

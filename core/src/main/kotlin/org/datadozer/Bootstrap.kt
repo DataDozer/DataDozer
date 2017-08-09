@@ -19,6 +19,30 @@ package org.datadozer
  * under the License.
  */
 
+/**
+ * Initialize the listeners to be used across the application
+ */
+fun initializeListeners() {
+
+}
+
+/**
+ * Capture all un-handled exceptions
+ */
+fun subscribeToUnhandledExceptions() {
+    Thread.setDefaultUncaughtExceptionHandler { _, e ->
+        Logger.error("Critical system error", e)
+    }
+}
+
+/**
+ * Load all the server components and return settings
+ */
+fun load() {
+    subscribeToUnhandledExceptions()
+
+}
+
 fun main(args: Array<String>) {
     Logger.debug("Yeyy")
 }
