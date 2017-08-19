@@ -26,3 +26,4 @@ _testmain.go
 build/
 .idea/
 core/out/
+logs/
