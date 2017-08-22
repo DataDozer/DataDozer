@@ -1,16 +1,54 @@
 syntax = "proto3";
+package datadozer;
+import "google/protobuf/wrappers.proto";
 
+option csharp_namespace = "Datadozer.Models";
+option cc_enable_arenas = true;
 option java_multiple_files = true;
-option java_package = "org.datadozer.grpc";
-option java_outer_classname = "DataDozerService";
-option objc_class_prefix = "HLW";
+option java_package = "org.datadozer.models";
+option java_outer_classname = "DataDozerModel";
+option objc_class_prefix = "DZM";
 
-package helloworld;
+// Data type of the field
+enum FieldDataType {
+    TEXT = 0;
+    KEYWORD = 1;
+    INT_POINT = 3;
+    LONG_PONT = 4;
+    FLOAT_POINT = 5;
+    DOUBLE_POINT = 6;
+    BINARY_POINT = 7;
+    DATE = 8;
+    DATE_TIME = 9;
+    STORED_ONLY = 10;
+    IP4 = 11;
+    IP6 = 12;
+    LAT_LONG = 13;
+    BOOLEAN = 14;
+}
 
-// The greeting service definition.
-service Greeter {
-  // Sends a greeting
-  rpc SayHello (HelloRequest) returns (HelloReply) {}
+// Corresponds to Lucene Index version. There will always be a default
+// codec associated with each index version.
+enum IndexVersion {
+   DATA_DOZER_1A = 0;
+}
+
+// A Directory is a flat list of files. Files may be written once, when
+// they are created. Once a file is created it may only be opened for
+// read, or deleted. Random access is permitted both when reading and
+// writing.
+enum DirectoryType {
+    MEMORY_MAPPED = 0;
+    RAM = 1;
+    FILE_SYSTEM = 2;
+}
+
+// Similarity defines the components of scoring. Similarity determines how
+// engine weights terms. FlexSearch interacts with Similarity at both index-time
+// and query-time.
+enum Similarity {
+    BM25 = 0;
+    TFIDF = 1;
 }
 
 // Represents an operational message returned from the operation. This can be used to
@@ -23,13 +61,191 @@ message OperationMessage {
     string operation_code = 2;
 }
 
+// Tokenizer breaks up a stream of text into tokens, where each token is a sub-sequence
+// of the characters in the text. An analyzer is aware of the field it is configured
+// for, but a tokenizer is not.
+message Tokenizer {
+    // Name of the tokenizer
+    string tokenizer_name = 1;
 
-// The request message containing the user's name.
-message HelloRequest {
-  string name = 1;
+    // Key value pair to be used to configure object's properties.
+    map<string, string> parameters = 2;
 }
 
-// The response message containing the greetings
-message HelloReply {
-  string message = 1;
+// Filters consume input and produce a stream of tokens. In most cases a filter looks
+// at each token in the stream sequentially and decides whether to pass it along,
+// replace it or discard it. A filter may also do more complex analysis by looking
+// ahead to consider multiple tokens at once, although this is less common.
+message Filter {
+    // Name of the filter
+    string filter_name = 1;
+
+    // Key value pair to be used to configure object's properties.
+    map<string, string> parameters = 2;
+}
+
+// An analyzer examines the text of fields and generates a token stream.
+message Analyzer {
+    // Name of the analyzer
+    string analyzer_name = 1;
+
+    // Tokenizer associated with the analyzer
+    Tokenizer tokenizer = 2;
+
+    // FIiters associated with the analyzer
+    repeated Filter filters = 3;
+}
+
+// Allows to control various Index Shards related settings.
+message ShardConfiguration {
+    // Total number of shards to be present in the given index.
+    int32 shard_count = 1;
+}
+
+// Allows to control various Index related settings.
+message IndexConfiguration {
+    // The amount of time in seconds that FlexSearch should wait before
+    // committing changes to the disk. This is only used if no commits have
+    // happened in the set time period otherwise CommitEveryNFlushes takes
+    // care of commits
+    google.protobuf.Int32Value commit_time_seconds = 1;
+
+    // The amount of time in milliseconds that FlexSearch should wait before
+    // reopening index reader. This helps in keeping writing and real time
+    // aspects of the engine separate.
+    google.protobuf.Int32Value refresh_time_milliseconds = 2;
+
+    ShardConfiguration shard_configuration = 3;
+
+    // Determines whether to commit first before closing an index
+    google.protobuf.BoolValue commit_on_close = 4;
+
+    // Determines whether to enable auto commit functionality or not
+    google.protobuf.BoolValue auto_commit = 5;
+
+    // Determines whether to clear all transaction logs before closing an
+    // index. This setting is for advance use and should be left to default.
+    google.protobuf.BoolValue delete_logs_on_close = 6;
+
+    // A Directory is a flat list of files. Files may be written once, when
+    // they are created. Once a file is created it may only be opened for
+    // read, or deleted. Random access is permitted both when reading and
+    // writing.
+    DirectoryType directory_type = 7;
+
+    // The default maximum time to wait for a write lock (in milliseconds).
+    google.protobuf.Int32Value default_write_lock_timeout_milliseconds = 8;
+
+    // Determines the amount of RAM that may be used for buffering added
+    // documents and deletions before they are flushed to the Directory.
+    google.protobuf.Int32Value ram_buffer_size_mb = 9;
+
+    // The number of buffered added documents that will trigger a flush if
+    // enabled.
+    google.protobuf.Int32Value max_buffered_docs = 10;
+
+    // Determines whether to enable auto refresh or not
+    google.protobuf.BoolValue auto_refresh = 11;
+
+    // Corresponds to Lucene Index version. There will always be a default
+    // codec associated with each index version.
+    IndexVersion index_version = 12;
+
+    // Signifies if the index supports reading back of indexed data.
+    google.protobuf.BoolValue allow_reads = 13;
+
+    // Signifies if the index supports modification of data.
+    google.protobuf.BoolValue allow_writes = 14;
+}
+
+// A single indexable field
+message Field {
+    // Name of the field
+    string field_name = 1;
+
+    // Field data type
+    FieldDataType data_type = 2;
+
+    // Enable field sorting
+    google.protobuf.BoolValue allow_sort = 3;
+
+    // Analyzer to be used during indexing
+    google.protobuf.StringValue index_analyzer = 4;
+
+    // Analyzer to be used during searching
+    google.protobuf.StringValue search_analyzer = 5;
+
+    // Similarity for the field
+    Similarity similarity = 6;
+}
+
+message Index {
+    // Name of the index
+    string index_name = 1;
+
+    // Fields present in the index
+    repeated Field fields = 2;
+
+    // Index configuration settings
+    IndexConfiguration index_configuration = 3;
+
+    // Represents if an Index is active or not?
+    google.protobuf.BoolValue active = 4;
+
+    // Predefined query
+}
+
+message FieldValue {
+    repeated string values = 1;
+}
+
+// Additional information associated with a document which is only populated when
+// search results are returned.
+message SearchResultProperties {
+    // Represents the time at which the document was last indexed
+    int64 timestamp = 8;
+
+    // The score associated with the document. This will only be used when
+    // documents are returned from a Search Query.
+    float score = 9;
+
+    // highlights
+}
+
+// A document represents the basic unit of information which can be added or
+// retrieved from the index. A document consists of several fields. A field represents
+// the actual data to be indexed. In database analogy an index can be considered as
+// a table while a document is a row of that table. Like a table a Datadozer document
+// requires a fix schema and all fields should have a field type.
+message Document {
+
+    // Name of the index to which the document belongs
+    string index_name = 1;
+
+    // The unique id of the document
+    string id = 2;
+
+    /*oneof id {
+        string string_id = 2;
+        int32 int_id = 3;
+        int64 long_id = 4;
+    }*/
+
+    // Represents the operation number associated with the operation in the global order
+    // of the operations. This allows causal ordering of the events. A documents with a lower
+    // ModifyIndex can be assumed to be modified before another with a higher number. ModifyIndex
+    // is used for optimistic concurrency control.
+    int64 modify_index = 5;
+
+    // Since we are not taking the field names as part of values we use this hash to identifty
+    // the order in which fields are passed to the server.
+    string field_order_hash = 6;
+
+    // Field Values associated with the document
+    repeated FieldValue fields = 7;
+
+    // Additional information associated with a document which is only populated when
+    // search results are returned.
+    SearchResultProperties properties = 8;
+
 }
