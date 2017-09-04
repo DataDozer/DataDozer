@@ -1,8 +1,13 @@
-apply plugin: 'com.github.hierynomus.license'
-apply plugin: 'com.github.hierynomus.license-report'
-
 buildscript {
-    ext.kotlin_version = '1.1.4-2'
+    // Versions of dependencies which are used multiple times
+    ext {
+        kotlin_version = '1.1.4-3'
+        log4j = '2.8.2'
+        junit = '5.0.0-RC3'
+        junit_runner = '1.0.0-RC3'
+        sourceCompatibility = 1.8
+    }
+
     repositories {
         mavenCentral()
         jcenter()
@@ -13,14 +18,18 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.14.0'
+        classpath "gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.14.0"
+        classpath "org.junit.platform:junit-platform-gradle-plugin:$junit_runner"
 
     }
 }
 
-apply plugin: 'idea'
+apply plugin: 'com.github.hierynomus.license'
+apply plugin: 'com.github.hierynomus.license-report'
 
 allprojects {
+    apply plugin: 'org.junit.platform.gradle.plugin'
+    apply plugin: 'idea'
     apply plugin: 'java'
     apply plugin: 'kotlin'
 
@@ -38,15 +47,57 @@ allprojects {
 
     repositories {
         mavenCentral()
+        jcenter()
     }
 
     dependencies {
         compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
-        compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
-        compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
-        compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.2'
-        compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.8.2'
+        compile "org.slf4j:slf4j-api:1.7.25"
+        compile "org.apache.logging.log4j:log4j-api:$log4j"
+        compile "org.apache.logging.log4j:log4j-core:$log4j"
+        compile "org.apache.logging.log4j:log4j-slf4j-impl:$log4j"
+        compile 'com.github.salomonbrys.kodein:kodein:4.1.0'
+
+        testCompile "org.junit.jupiter:junit-jupiter-params:$junit"
+        testCompile "org.junit.jupiter:junit-jupiter-api:$junit"
+
+        // Enable use of the JUnitPlatform Runner within the IDE
+        testCompile "org.junit.platform:junit-platform-runner:$junit_runner"
+
+        // Only needed to run tests in an IntelliJ IDEA that bundles an older version
+        testRuntime "org.junit.jupiter:junit-jupiter-engine:$junit"
+        testRuntime "org.junit.platform:junit-platform-launcher:$junit_runner"
     }
+
+    test {
+        testLogging {
+            events 'started', 'passed'
+        }
+    }
+
+    junitPlatform {
+        platformVersion "$junit_runner"
+        //logManager 'org.apache.logging.log4j.jul.LogManager'
+        reportsDir file('build/test-results/junit-platform')
+        details 'tree'
+        filters {
+            engines {
+                include 'junit-jupiter'
+                // exclude 'junit-vintage'
+            }
+            tags {
+                //include 'fast', 'smoke'
+                // exclude 'slow', 'ci'
+            }
+            packages {
+                // include 'com.sample.included1', 'com.sample.included2'
+                // exclude 'com.sample.excluded1', 'com.sample.excluded2'
+            }
+
+            includeClassNamePatterns '.*Test', '.*Tests'
+        }
+    }
+
 }
 
 downloadLicenses {
@@ -60,13 +111,16 @@ downloadLicenses {
     includeProjectDependencies = true
 
     aliases = [
-        (apacheTwo) : ['The Apache Software License, Version 2.0', 'The Apache License, Version 2.0', 'Apache-2.0', 'Apache 2.0', 'Apache 2', 'Apache License Version 2.0', 'Apache License, Version 2.0', 'Apache License 2.0', license('Apache License, Version 2.0', 'http://www.apache.org/licenses/LICENSE-2.0')],
-        (bsd) : ['BSD', 'BSD licence', 'The BSD License', license('The 2-Clause BSD License', 'http://www.opensource.org/licenses/bsd-license.php')],
-        (bsd3) : ['BSD3', 'BSD 3-Clause', '3-Clause BSD License', 'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)', license('The 3-Clause BSD License', 'https://opensource.org/licenses/BSD-3-Clause')],
-        (cddl) : ['CDDL3', 'Dual license consisting of the CDDL v1.1 and GPL v2', license('Common Development and Distribution License 1.0', 'https://opensource.org/licenses/CDDL-1.0')]
+            (apacheTwo): ['The Apache Software License, Version 2.0', 'The Apache License, Version 2.0', 'Apache-2.0', 'Apache 2.0', 'Apache 2', 'Apache License Version 2.0', 'Apache License, Version 2.0', 'Apache License 2.0', license('Apache License, Version 2.0', 'http://www.apache.org/licenses/LICENSE-2.0')],
+            (bsd)      : ['BSD', 'BSD licence', 'The BSD License', license('The 2-Clause BSD License', 'http://www.opensource.org/licenses/bsd-license.php')],
+            (bsd3)     : ['BSD3', 'BSD 3-Clause', '3-Clause BSD License', 'BSD 3-Clause "New" or "Revised" License (BSD-3-Clause)', license('The 3-Clause BSD License', 'https://opensource.org/licenses/BSD-3-Clause')],
+            (cddl)     : ['CDDL3', 'Dual license consisting of the CDDL v1.1 and GPL v2', license('Common Development and Distribution License 1.0', 'https://opensource.org/licenses/CDDL-1.0')]
     ]
 }
 
-project(':core') {
+apply plugin: 'distribution'
 
+version = '0.1.0'
+distributions {
+    custom {}
 }

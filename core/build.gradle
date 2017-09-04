@@ -9,10 +9,13 @@ buildscript {
             url "https://plugins.gradle.org/m2/"
         }
     }
+    
     dependencies {
-        // ASSUMES GRADLE 2.12 OR HIGHER. Use plugin version 0.7.5 with earlier
-        // gradle versions
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.1'
+    }
+
+    tasks.withType(JavaExec) {
+        classpath += files("src/main/dist/config")
     }
 }
 
@@ -24,12 +27,13 @@ def grpcVersion = '1.4.0'
 
 dependencies {
     compile "com.google.api.grpc:proto-google-common-protos:0.1.9"
-    compile "io.grpc:grpc-netty:${grpcVersion}"
-    compile "io.grpc:grpc-protobuf:${grpcVersion}"
-    compile "io.grpc:grpc-stub:${grpcVersion}"
+    compile "io.grpc:grpc-netty:$grpcVersion"
+    compile "io.grpc:grpc-protobuf:$grpcVersion"
+    compile "io.grpc:grpc-stub:$grpcVersion"
     antlr "org.antlr:antlr4:4.7"
 
-    testCompile "io.grpc:grpc-testing:${grpcVersion}"
+    testCompile "io.grpc:grpc-testing:$grpcVersion"
+    runtime files('src/main/dist/config')
 }
 
 protobuf {
@@ -38,7 +42,7 @@ protobuf {
     }
     plugins {
         grpc {
-            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+            artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
         }
     }
     generateProtoTasks {
@@ -52,8 +56,30 @@ protobuf {
     }
 }
 
-// Inform IntelliJ projects about the generated code.
-apply plugin: 'idea'
+//compileKotlin.dependsOn generateProto
+
+compileKotlin {
+    kotlinOptions {
+        suppressWarnings = true
+    }
+    dependsOn('generateProto')
+}
+
+sourceSets {
+    main.kotlin.srcDirs = [
+        "${projectDir}/src/main/java",
+        "${projectDir}/build/generated/source/proto/main/java",
+        "${projectDir}/build/generated/source/proto/main/grpc",
+        "${projectDir}/build/generated-src/antlr/main",
+        "${projectDir}/src/main/kotlin"
+    ]
+
+
+/*    main {
+        compileClasspath += generated.output
+        runtimeClasspath += generated.output
+    }*/
+}
 
 idea {
     module {
