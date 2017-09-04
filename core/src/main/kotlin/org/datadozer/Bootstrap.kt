@@ -1,5 +1,10 @@
 package org.datadozer
 
+import com.github.salomonbrys.kodein.Kodein
+import com.github.salomonbrys.kodein.bind
+import com.github.salomonbrys.kodein.singleton
+import java.util.concurrent.ThreadPoolExecutor
+
 /*
  * Licensed to DataDozer under one or more contributor
  * license agreements. See the NOTICE file distributed with
@@ -18,6 +23,12 @@ package org.datadozer
  * specific language governing permissions and limitations
  * under the License.
  */
+
+fun dependencyFrameworkProvider() : Kodein {
+    return Kodein {
+        bind<ThreadPoolExecutor>() with singleton { threadPoolExecutorProvider()}
+    }
+}
 
 /**
  * Initialize the listeners to be used across the application
@@ -44,5 +55,5 @@ fun load() {
 }
 
 fun main(args: Array<String>) {
-    Logger.debug("Yeyy")
+
 }

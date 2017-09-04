@@ -1,6 +1,6 @@
 package org.datadozer
 
-import org.slf4j.LoggerFactory
+import org.apache.logging.log4j.LogManager
 
 /*
  * Licensed to DataDozer under one or more contributor
@@ -21,5 +21,17 @@ import org.slf4j.LoggerFactory
  * under the License.
  */
 
+/**
+ * Returns the number of processors available to the Java virtual machine.
+ */
+val AvailableProcessors = Runtime.getRuntime().availableProcessors()
 
-val Logger = LoggerFactory.getLogger("")!!
+/**
+ * Returns the default logger
+ */
+inline fun <reified T : Any> logProvider() = LogManager.getLogger(T::class.java.simpleName)!!
+
+/**
+ * Main default logger
+ */
+val Logger = LogManager.getLogger("main")!!
