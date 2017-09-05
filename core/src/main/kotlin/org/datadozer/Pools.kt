@@ -51,18 +51,18 @@ fun threadPoolExecutorProvider(): ThreadPoolExecutor {
  * A fast int parser which only works in limited cases. It expects the numbers
  * to be small and positive. Do not use it for parsing any user data. It is used
  * by various pools to parse the thread name.
- *
- * This class does not do any overflow checks
+ * NOTE:
+ * - This class does not do any overflow, null or empty string checks
+ * - We always assume the number is correctly formatted
  */
 @Suppress("NOTHING_TO_INLINE")
-inline fun fastIntParser(value : String) : Int {
-    var v = 0
-    var ch : Char
-    for (i in 0 until value.length) {
+inline fun fastIntParser(value: String): Int {
+    // Unroll the first run of the loop
+    var ch = value[0]
+    var v = '0' - ch
+
+    for (i in 1 until value.length) {
         ch = value[i]
-        if(ch < '0' || ch > '9') {
-            throw NumberFormatException(value)
-        }
         if (i > 0) {
             v *= 10
         }
@@ -114,7 +114,7 @@ class SingleInstancePerThreadObjectPool<T : Any?>(private val provider: () -> T)
      * Borrowing more than once per thread will result in an error. Items should only
      * be borrowed for a very short span of time.
      */
-    fun borrowObject(slotNumber : Int?): T {
+    fun borrowObject(slotNumber: Int?): T {
         val threadId = slotNumber ?: getThreadId()
         val item = pool[threadId]
         return if (!borrowStatus[threadId]) {
@@ -133,7 +133,7 @@ class SingleInstancePerThreadObjectPool<T : Any?>(private val provider: () -> T)
      * Return an borrowed object to the pool. Never return an object twice as it will result
      * in an error.
      */
-    fun returnObject(item: T, slotNumber : Int?) {
+    fun returnObject(item: T, slotNumber: Int?) {
         if (item == null) {
             return
         }
