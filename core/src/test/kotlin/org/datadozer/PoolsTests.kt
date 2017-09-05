@@ -66,6 +66,28 @@ class SingleInstancePerThreadObjectPoolTests {
     }
 
     @Test
+    fun `A thread should only set values to its pooled objects`() {
+        println("Available processors: $AvailableProcessors")
+        val runnable = Runnable {
+            var value = pool.borrowObject(null)
+            assertEquals(0, value.prop2)
+            value.prop2 = getThreadId()
+            pool.returnObject(value, null)
+            value = pool.borrowObject(getThreadId())
+            assertEquals(getThreadId(), value.prop2)
+            value.prop2 = 0
+            pool.returnObject(value, null)
+        }
+
+        val tasks = List(AvailableProcessors * 10, { _ -> Executors.callable(runnable) })
+        var result = threadPool.invokeAll(tasks)
+
+        for (res in result) {
+            res.get()
+        }
+    }
+
+    @Test
     fun `Borrowing multiple objects will return a new instance`() {
         val runnable = Runnable {
             println("Running in thread:${Thread.currentThread().name}")
