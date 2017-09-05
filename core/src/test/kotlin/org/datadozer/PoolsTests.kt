@@ -26,6 +26,20 @@ import java.util.concurrent.Executors
 
 data class Test(var prop1: String, var prop2: Int)
 
+class PoolTests {
+
+    @Test
+    fun `Integers can be parsed`() {
+        for (i in 0 until 110) {
+            assertEquals(i, fastIntParser(i.toString()))
+        }
+
+        assertEquals(999, fastIntParser(999.toString()))
+        assertEquals(1000, fastIntParser(1000.toString()))
+        assertEquals(10000, fastIntParser(10000.toString()))
+    }
+}
+
 class SingleInstancePerThreadObjectPoolTests {
     private val threadPool = threadPoolExecutorProvider()
     private val pool = SingleInstancePerThreadObjectPool({ Test("test", 0) })
@@ -36,10 +50,10 @@ class SingleInstancePerThreadObjectPoolTests {
         val runnable = Runnable {
             println("Running in thread:${Thread.currentThread().name}")
             for (i in 0..50) {
-                var value = pool.borrowObject()
+                var value = pool.borrowObject(null)
                 assertEquals(i, value.prop2)
                 value.prop2 += 1
-                pool.returnObject(value)
+                pool.returnObject(value, null)
             }
         }
 
@@ -55,16 +69,16 @@ class SingleInstancePerThreadObjectPoolTests {
     fun `Borrowing multiple objects will return a new instance`() {
         val runnable = Runnable {
             println("Running in thread:${Thread.currentThread().name}")
-            var value = pool.borrowObject()
+            var value = pool.borrowObject(getThreadId())
             assertEquals(0, value.prop2)
             value.prop2 += 1
-            pool.returnObject(value)
-            value = pool.borrowObject()
+            pool.returnObject(value, getThreadId())
+            value = pool.borrowObject(null)
             // Value should be 1 as we have set it above
             assertEquals(1, value.prop2)
 
             // Borrowing again without returning will return a new object
-            var value1 = pool.borrowObject()
+            var value1 = pool.borrowObject(getThreadId())
             assertEquals(0, value1.prop2)
             assertNotEquals(value, value1)
         }

@@ -47,6 +47,42 @@ fun threadPoolExecutorProvider(): ThreadPoolExecutor {
             LinkedBlockingQueue<Runnable>(1000), threadFactory)
 }
 
+/**
+ * A fast int parser which only works in limited cases. It expects the numbers
+ * to be small and positive. Do not use it for parsing any user data. It is used
+ * by various pools to parse the thread name.
+ *
+ * This class does not do any overflow checks
+ */
+@Suppress("NOTHING_TO_INLINE")
+inline fun fastIntParser(value : String) : Int {
+    var v = 0
+    var ch : Char
+    for (i in 0 until value.length) {
+        ch = value[i]
+        if(ch < '0' || ch > '9') {
+            throw NumberFormatException(value)
+        }
+        if (i > 0) {
+            v *= 10
+        }
+        v += '0' - ch
+    }
+    return -v
+}
+
+/**
+ * Returns the custom thread id associated with the current thread. This is only useful
+ * for the threads from our custom thread pool.
+ */
+@Suppress("NOTHING_TO_INLINE")
+inline fun getThreadId(): Int {
+    try {
+        return fastIntParser(Thread.currentThread().name)
+    } catch (e: Exception) {
+        throw IllegalStateException("Object pool can only be accessed with specialized threads.")
+    }
+}
 
 /**
  * This is a lock free object pool which only maintains one object per thread.
@@ -73,21 +109,13 @@ class SingleInstancePerThreadObjectPool<T : Any?>(private val provider: () -> T)
         }
     }
 
-    private fun getThreadId(): Int {
-        try {
-            return Integer.parseInt(Thread.currentThread().name)
-        } catch (e: Exception) {
-            throw IllegalStateException("Object pool can only be accessed with specialized threads.")
-        }
-    }
-
     /**
      * Borrow an object from the pool. Make sure you only borrow the item once per thread.
-     * Borrowing more than once per thread will result in an exception. Items should only
+     * Borrowing more than once per thread will result in an error. Items should only
      * be borrowed for a very short span of time.
      */
-    fun borrowObject(): T {
-        val threadId = getThreadId()
+    fun borrowObject(slotNumber : Int?): T {
+        val threadId = slotNumber ?: getThreadId()
         val item = pool[threadId]
         return if (!borrowStatus[threadId]) {
             borrowStatus[threadId] = true
@@ -103,14 +131,14 @@ class SingleInstancePerThreadObjectPool<T : Any?>(private val provider: () -> T)
 
     /**
      * Return an borrowed object to the pool. Never return an object twice as it will result
-     * in an exception.
+     * in an error.
      */
-    fun returnObject(item: T) {
+    fun returnObject(item: T, slotNumber : Int?) {
         if (item == null) {
             return
         }
 
-        val threadId = getThreadId()
+        val threadId = slotNumber ?: getThreadId()
         if (!borrowStatus[threadId]) {
             logger.warn("Expecting object pool thread slot to be empty. Make sure you are not returning twice or returning a non pooled object.")
         }
