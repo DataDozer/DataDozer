@@ -24,9 +24,10 @@ import java.util.concurrent.ThreadPoolExecutor
  * under the License.
  */
 
-fun dependencyFrameworkProvider() : Kodein {
+fun dependencyFrameworkProvider(): Kodein {
     return Kodein {
-        bind<ThreadPoolExecutor>() with singleton { threadPoolExecutorProvider()}
+        bind<ThreadPoolExecutor>() with singleton { threadPoolExecutorProvider() }
+        bind<Settings>() with singleton { Settings() }
     }
 }
 
@@ -47,7 +48,7 @@ fun subscribeToUnhandledExceptions() {
 }
 
 /**
- * Load all the server components and return settings
+ * Load all the server components and return writerSettings
  */
 fun load() {
     subscribeToUnhandledExceptions()

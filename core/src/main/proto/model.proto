@@ -30,7 +30,7 @@ enum FieldDataType {
 // Corresponds to Lucene Index version. There will always be a default
 // codec associated with each index version.
 enum IndexVersion {
-   DATA_DOZER_1A = 0;
+    DATA_DOZER_1A = 0;
 }
 
 // A Directory is a flat list of files. Files may be written once, when
@@ -96,13 +96,13 @@ message Analyzer {
     repeated Filter filters = 3;
 }
 
-// Allows to control various Index Shards related settings.
+// Allows to control various Index Shards related writerSettings.
 message ShardConfiguration {
     // Total number of shards to be present in the given index.
     int32 shard_count = 1;
 }
 
-// Allows to control various Index related settings.
+// Allows to control various Index related writerSettings.
 message IndexConfiguration {
     // The amount of time in seconds that FlexSearch should wait before
     // committing changes to the disk. This is only used if no commits have
@@ -186,7 +186,7 @@ message Index {
     // Fields present in the index
     repeated Field fields = 2;
 
-    // Index configuration settings
+    // Index configuration writerSettings
     IndexConfiguration index_configuration = 3;
 
     // Represents if an Index is active or not?
@@ -195,8 +195,26 @@ message Index {
     // Predefined query
 }
 
+message Integers {
+    repeated int32 integers = 1;
+}
+
+message Floats {
+    repeated float integers = 1;
+}
+
 message FieldValue {
-    repeated string values = 1;
+    oneof value {
+        string string_value = 1;
+        int32 integer_value = 2;
+        int64 long_value = 3;
+        float float_value = 4;
+        double double_value = 5;
+        bool bool_value = 6;
+        Integers integers_value = 7;
+        Floats floats_value = 8;
+
+    }
 }
 
 // Additional information associated with a document which is only populated when
@@ -247,5 +265,37 @@ message Document {
     // Additional information associated with a document which is only populated when
     // search results are returned.
     SearchResultProperties properties = 8;
+}
 
+// Types of transaction log enteries
+enum TransactionLogEntryType {
+    DOC_CREATE = 0;
+    DOC_UPDATE = 1;
+    DOC_DELETE = 2;
+    DOC_BULKDELETE = 3;
+    INDEX_CREATE = 4;
+    INDEX_UPDATE = 5;
+    INDEX_DELETE = 6;
+    INDEX_CLEAR = 7;
+    REVERT_DOC = 8;
+}
+
+// TransactionLogEntryHeader defines the header level properties for a transaction. It
+// is fixed size which enables use to travese a file quickly as we don't have to detect the
+// size of the files. This will also help in case of transaction log curroption.
+message TransactionLogEntryHeader {
+    int64 modify_index = 1;
+    int32 index_id = 2;
+    TransactionLogEntryType entry_type = 3;
+    int32 data_location = 4;
+    int32 message_size = 5;
+    int32 file_id = 6;
+}
+
+// A transaction is the minimum unit of work in DataDozer. The message is written to
+// the physical medium before applying the transaction. This provides durability in
+// the envent of failure.
+message TransactionLogEntry {
+    TransactionLogEntryHeader header = 1;
+    bytes data = 2;
 }
