@@ -69,16 +69,12 @@ fun tryValidate(validation: () -> Unit): Boolean {
     }
 }
 
-inline fun <T> tryParseWith(parser: (String) -> T, value: String): T? {
+inline fun <T> tryParseWith(parser: (String) -> T, value: String, defaultValue : T): T {
     return try {
         parser(value)
     } catch (e: OperationException) {
-        null
+        defaultValue
     }
-}
-
-fun parseInt(value: String): Int? {
-    return tryParseWith(Integer::parseInt, value)
 }
 
 fun <T : Comparable<T>> greaterThan(fieldName: String, lowerLimit: T, value: T) {

@@ -1,7 +1,7 @@
 package org.datadozer
 
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.function.Executable
+import java.nio.ByteBuffer
+import java.util.*
 
 /*
  * Licensed to DataDozer under one or more contributor
@@ -22,20 +22,12 @@ import org.junit.jupiter.api.function.Executable
  * under the License.
  */
 
-val k = dependencyFrameworkProvider()
-
-typealias exec = Executable
-
-fun testThrows(assertion: () -> Unit) {
-    Assertions.assertThrows(OperationException::class.java, {
-        assertion()
-    })
-}
-
-fun execT(assertion: () -> Unit): Executable {
-    return exec {
-        Assertions.assertThrows(OperationException::class.java, {
-            assertion()
-        })
-    }
+/**
+ * Converts UUID to byte array
+ */
+fun uuidToByteArray(id: UUID): ByteArray {
+    val bb = ByteBuffer.wrap(kotlin.ByteArray(16))
+    bb.putLong(id.mostSignificantBits)
+    bb.putLong(id.leastSignificantBits)
+    return bb.array()
 }

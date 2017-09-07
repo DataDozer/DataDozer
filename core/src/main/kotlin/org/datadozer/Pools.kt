@@ -114,7 +114,7 @@ class SingleInstancePerThreadObjectPool<T : Any?>(private val provider: () -> T)
      * Borrowing more than once per thread will result in an error. Items should only
      * be borrowed for a very short span of time.
      */
-    fun borrowObject(slotNumber: Int?): T {
+    fun borrowObject(slotNumber: Int? = null): T {
         val threadId = slotNumber ?: getThreadId()
         val item = pool[threadId]
         return if (!borrowStatus[threadId]) {
@@ -133,7 +133,7 @@ class SingleInstancePerThreadObjectPool<T : Any?>(private val provider: () -> T)
      * Return an borrowed object to the pool. Never return an object twice as it will result
      * in an error.
      */
-    fun returnObject(item: T, slotNumber: Int?) {
+    fun returnObject(item: T, slotNumber: Int? = null) {
         if (item == null) {
             return
         }
