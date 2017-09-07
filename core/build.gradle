@@ -9,7 +9,7 @@ buildscript {
             url "https://plugins.gradle.org/m2/"
         }
     }
-    
+
     dependencies {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.1'
     }
@@ -19,13 +19,24 @@ buildscript {
     }
 }
 
-repositories {
-    mavenCentral()
-}
-
-def grpcVersion = '1.4.0'
-
 dependencies {
+    // lucene
+    compile "org.apache.lucene:lucene-core:$lucene"
+    compile "org.apache.lucene:lucene-analyzers-common:$lucene"
+    compile "org.apache.lucene:lucene-backward-codecs:$lucene"
+    compile "org.apache.lucene:lucene-grouping:$lucene"
+    compile "org.apache.lucene:lucene-highlighter:$lucene"
+    compile "org.apache.lucene:lucene-join:$lucene"
+    compile "org.apache.lucene:lucene-memory:$lucene"
+    compile "org.apache.lucene:lucene-misc:$lucene"
+    compile "org.apache.lucene:lucene-queries:$lucene"
+    compile "org.apache.lucene:lucene-queryparser:$lucene"
+    compile "org.apache.lucene:lucene-sandbox:$lucene"
+    compile "org.apache.lucene:lucene-spatial:$lucene"
+    compile "org.apache.lucene:lucene-spatial-extras:$lucene"
+    compile "org.apache.lucene:lucene-spatial3d:$lucene"
+    compile "org.apache.lucene:lucene-suggest:$lucene"
+
     compile "com.google.api.grpc:proto-google-common-protos:0.1.9"
     compile "io.grpc:grpc-netty:$grpcVersion"
     compile "io.grpc:grpc-protobuf:$grpcVersion"
@@ -56,8 +67,6 @@ protobuf {
     }
 }
 
-//compileKotlin.dependsOn generateProto
-
 compileKotlin {
     kotlinOptions {
         suppressWarnings = true
@@ -67,18 +76,12 @@ compileKotlin {
 
 sourceSets {
     main.kotlin.srcDirs = [
-        "${projectDir}/src/main/java",
-        "${projectDir}/build/generated/source/proto/main/java",
-        "${projectDir}/build/generated/source/proto/main/grpc",
-        "${projectDir}/build/generated-src/antlr/main",
-        "${projectDir}/src/main/kotlin"
+            "${projectDir}/src/main/java",
+            "${projectDir}/build/generated/source/proto/main/java",
+            "${projectDir}/build/generated/source/proto/main/grpc",
+            "${projectDir}/build/generated-src/antlr/main",
+            "${projectDir}/src/main/kotlin"
     ]
-
-
-/*    main {
-        compileClasspath += generated.output
-        runtimeClasspath += generated.output
-    }*/
 }
 
 idea {
