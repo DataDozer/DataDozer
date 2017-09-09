@@ -57,8 +57,12 @@ message OperationMessage {
     // The actual message returned by the operation.
     string message = 1;
 
+    // Key value pair in key='value' format which can be easily parsed by the caller.
+    // The values will be separated by a comma.
+    string details = 2;
+
     // Operation Code associated with the message.
-    string operation_code = 2;
+    string operation_code = 3;
 }
 
 // Tokenizer breaks up a stream of text into tokens, where each token is a sub-sequence
@@ -203,6 +207,10 @@ message Floats {
     repeated float integers = 1;
 }
 
+message Strings {
+    repeated string strings = 1;
+}
+
 message FieldValue {
     oneof value {
         string string_value = 1;
@@ -213,7 +221,7 @@ message FieldValue {
         bool bool_value = 6;
         Integers integers_value = 7;
         Floats floats_value = 8;
-
+        Strings strings_value = 9;
     }
 }
 

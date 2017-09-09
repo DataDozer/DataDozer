@@ -69,7 +69,16 @@ fun tryValidate(validation: () -> Unit): Boolean {
     }
 }
 
-inline fun <T> tryParseWith(parser: (String) -> T, value: String, defaultValue : T): T {
+inline fun <T> tryParse(parser: (String) -> T, value: String, defaultValue: T): Pair<Boolean, T> {
+    return try {
+        val v = parser(value)
+        Pair(true, v)
+    } catch (e: OperationException) {
+        Pair(false, defaultValue)
+    }
+}
+
+inline fun <T> tryParseWith(parser: (String) -> T, value: String, defaultValue: T): T {
     return try {
         parser(value)
     } catch (e: OperationException) {
@@ -80,36 +89,40 @@ inline fun <T> tryParseWith(parser: (String) -> T, value: String, defaultValue :
 fun <T : Comparable<T>> greaterThan(fieldName: String, lowerLimit: T, value: T) {
     if (value <= lowerLimit) {
         throw OperationException(OperationMessage.newBuilder()
-                .setMessage("Field '$fieldName' must be greater than $lowerLimit, but found $value")
-                .setOperationCode(OperationCode.ValidationError)
-                .build())
+                                         .setMessage(
+                                                 "Field '$fieldName' must be greater than $lowerLimit, but found $value")
+                                         .setOperationCode(OperationCode.ValidationError)
+                                         .build())
     }
 }
 
 fun <T : Comparable<T>> greaterThanEqual(fieldName: String, lowerLimit: T, value: T) {
     if (value < lowerLimit) {
         throw OperationException(OperationMessage.newBuilder()
-                .setMessage("Field '$fieldName' must be greater than or equal to $lowerLimit, but found $value")
-                .setOperationCode(OperationCode.ValidationError)
-                .build())
+                                         .setMessage(
+                                                 "Field '$fieldName' must be greater than or equal to $lowerLimit, but found $value")
+                                         .setOperationCode(OperationCode.ValidationError)
+                                         .build())
     }
 }
 
 fun <T : Comparable<T>> lessThan(fieldName: String, upperLimit: T, value: T) {
     if (value >= upperLimit) {
         throw OperationException(OperationMessage.newBuilder()
-                .setMessage("Field '$fieldName' must be less than $upperLimit, but found $value")
-                .setOperationCode(OperationCode.ValidationError)
-                .build())
+                                         .setMessage(
+                                                 "Field '$fieldName' must be less than $upperLimit, but found $value")
+                                         .setOperationCode(OperationCode.ValidationError)
+                                         .build())
     }
 }
 
 fun <T : Comparable<T>> lessThanEqual(fieldName: String, upperLimit: T, value: T) {
     if (value > upperLimit) {
         throw OperationException(OperationMessage.newBuilder()
-                .setMessage("Field '$fieldName' must be less than or equal to $upperLimit, but found $value")
-                .setOperationCode(OperationCode.ValidationError)
-                .build())
+                                         .setMessage(
+                                                 "Field '$fieldName' must be less than or equal to $upperLimit, but found $value")
+                                         .setOperationCode(OperationCode.ValidationError)
+                                         .build())
     }
 }
 
@@ -119,9 +132,10 @@ fun <T : Comparable<T>> lessThanEqual(fieldName: String, upperLimit: T, value: T
 fun hasDuplicates(groupName: String, fieldName: String, input: Array<String>) {
     if (input.count() != input.distinct().count()) {
         throw OperationException(OperationMessage.newBuilder()
-                .setMessage("A duplicate entry ($fieldName) has been found in the group '$groupName'")
-                .setOperationCode(OperationCode.ValidationError)
-                .build())
+                                         .setMessage(
+                                                 "A duplicate entry ($fieldName) has been found in the group '$groupName'")
+                                         .setOperationCode(OperationCode.ValidationError)
+                                         .build())
     }
 }
 
@@ -131,9 +145,9 @@ fun hasDuplicates(groupName: String, fieldName: String, input: Array<String>) {
 fun notBlank(fieldName: String, value: String) {
     if (value.isNullOrBlank()) {
         throw OperationException(OperationMessage.newBuilder()
-                .setMessage("Field '$fieldName' must not be blank")
-                .setOperationCode(OperationCode.ValidationError)
-                .build())
+                                         .setMessage("Field '$fieldName' must not be blank")
+                                         .setOperationCode(OperationCode.ValidationError)
+                                         .build())
     }
 }
 
@@ -145,8 +159,9 @@ private val regex = Regex("^[a-z0-9_]*\$")
 fun isPropertyName(fieldName: String, value: String) {
     if (!regex.containsMatchIn(value)) {
         throw OperationException(OperationMessage.newBuilder()
-                .setMessage("Name is invalid for field '$fieldName'. A property name can only contain 'a-z', '0-9' and '_' characters")
-                .setOperationCode(OperationCode.ValidationError)
-                .build())
+                                         .setMessage(
+                                                 "Name is invalid for field '$fieldName'. A property name can only contain 'a-z', '0-9' and '_' characters")
+                                         .setOperationCode(OperationCode.ValidationError)
+                                         .build())
     }
 }

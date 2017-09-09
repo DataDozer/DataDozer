@@ -2,7 +2,6 @@ package org.datadozer.index
 
 import org.datadozer.SingleInstancePerThreadObjectPool
 import org.datadozer.models.Document
-import org.datadozer.models.FieldValue
 import org.datadozer.models.TransactionLogEntryType
 import org.datadozer.threadPoolExecutorProvider
 import org.junit.AfterClass
@@ -88,17 +87,6 @@ class TransactionLogTests {
             assertEquals(txId.toString(), data.id)
             assertEquals("index1", data.indexName)
             txId++
-        }
-    }
-
-    @Test
-    fun Test() {
-        val fv = FieldValue.newBuilder()
-        fv.stringValue = "53w5"
-        val f = fv.build()
-
-        if(f.integerValue == 0) {
-            val c = true;
         }
     }
 
