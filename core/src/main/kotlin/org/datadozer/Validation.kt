@@ -1,6 +1,7 @@
 package org.datadozer
 
 import org.datadozer.models.OperationMessage
+import org.datadozer.models.OperationStatus
 
 /*
  * Licensed to DataDozer under one or more contributor
@@ -51,9 +52,25 @@ class OperationException(val operationMessage: OperationMessage) : Exception(ope
         get() = operationMessage.toString()
 }
 
-class OperationCode {
-    companion object {
-        val ValidationError = "Validation Error"
+/**
+ * Throws an [OperationException] with the result of calling [lazyMessage] if the [value] is false.
+ */
+inline fun check(value: Boolean, lazyMessage: () -> OperationMessage) {
+    if (!value) {
+        throw OperationException(lazyMessage())
+    }
+}
+
+/**
+ * Throws an [OperationException] with the result of calling [lazyMessage]  if the [value] is null. Otherwise
+ * returns the not null value.
+ */
+inline fun <T : Any> checkNotNull(value: T?, lazyMessage: () -> OperationMessage): T {
+    if (value == null) {
+        val message = lazyMessage()
+        throw OperationException(message)
+    } else {
+        return value
     }
 }
 
@@ -88,41 +105,47 @@ inline fun <T> tryParseWith(parser: (String) -> T, value: String, defaultValue: 
 
 fun <T : Comparable<T>> greaterThan(fieldName: String, lowerLimit: T, value: T) {
     if (value <= lowerLimit) {
-        throw OperationException(OperationMessage.newBuilder()
-                                         .setMessage(
-                                                 "Field '$fieldName' must be greater than $lowerLimit, but found $value")
-                                         .setOperationCode(OperationCode.ValidationError)
-                                         .build())
+        throw OperationException(
+                OperationMessage.newBuilder()
+                        .setMessage("Field '$fieldName' must be greater than '$lowerLimit', but found '$value'.")
+                        .setDetails("field_name='$fieldName',lower_limit='$lowerLimit',value='$value'")
+                        .setStatus(OperationStatus.FAILURE)
+                        .build())
     }
 }
 
 fun <T : Comparable<T>> greaterThanEqual(fieldName: String, lowerLimit: T, value: T) {
     if (value < lowerLimit) {
-        throw OperationException(OperationMessage.newBuilder()
-                                         .setMessage(
-                                                 "Field '$fieldName' must be greater than or equal to $lowerLimit, but found $value")
-                                         .setOperationCode(OperationCode.ValidationError)
-                                         .build())
+        throw OperationException(
+                OperationMessage.newBuilder()
+                        .setMessage(
+                                "Field '$fieldName' must be greater than or equal to '$lowerLimit', but found '$value'")
+                        .setDetails("field_name='$fieldName',lower_limit='$lowerLimit',value='$value'")
+                        .setStatus(OperationStatus.FAILURE)
+                        .build())
     }
 }
 
 fun <T : Comparable<T>> lessThan(fieldName: String, upperLimit: T, value: T) {
     if (value >= upperLimit) {
-        throw OperationException(OperationMessage.newBuilder()
-                                         .setMessage(
-                                                 "Field '$fieldName' must be less than $upperLimit, but found $value")
-                                         .setOperationCode(OperationCode.ValidationError)
-                                         .build())
+        throw OperationException(
+                OperationMessage.newBuilder()
+                        .setMessage("Field '$fieldName' must be less than '$upperLimit', but found '$value'")
+                        .setDetails("field_name='$fieldName',upper_limit='$upperLimit',value='$value'")
+                        .setStatus(OperationStatus.FAILURE)
+                        .build())
     }
 }
 
 fun <T : Comparable<T>> lessThanEqual(fieldName: String, upperLimit: T, value: T) {
     if (value > upperLimit) {
-        throw OperationException(OperationMessage.newBuilder()
-                                         .setMessage(
-                                                 "Field '$fieldName' must be less than or equal to $upperLimit, but found $value")
-                                         .setOperationCode(OperationCode.ValidationError)
-                                         .build())
+        throw OperationException(
+                OperationMessage.newBuilder()
+                        .setMessage(
+                                "Field '$fieldName' must be less than or equal to '$upperLimit', but found '$value'")
+                        .setDetails("field_name='$fieldName',upper_limit='$upperLimit',value='$value'")
+                        .setStatus(OperationStatus.FAILURE)
+                        .build())
     }
 }
 
@@ -131,11 +154,12 @@ fun <T : Comparable<T>> lessThanEqual(fieldName: String, upperLimit: T, value: T
  */
 fun hasDuplicates(groupName: String, fieldName: String, input: Array<String>) {
     if (input.count() != input.distinct().count()) {
-        throw OperationException(OperationMessage.newBuilder()
-                                         .setMessage(
-                                                 "A duplicate entry ($fieldName) has been found in the group '$groupName'")
-                                         .setOperationCode(OperationCode.ValidationError)
-                                         .build())
+        throw OperationException(
+                OperationMessage.newBuilder()
+                        .setMessage("A duplicate entry '$fieldName' has been found in the group '$groupName'")
+                        .setDetails("field_name='$fieldName',group_name='$groupName'")
+                        .setStatus(OperationStatus.FAILURE)
+                        .build())
     }
 }
 
@@ -143,10 +167,11 @@ fun hasDuplicates(groupName: String, fieldName: String, input: Array<String>) {
  * Checks if the given string is null or empty
  */
 fun notBlank(fieldName: String, value: String) {
-    if (value.isNullOrBlank()) {
+    if (value.isBlank()) {
         throw OperationException(OperationMessage.newBuilder()
-                                         .setMessage("Field '$fieldName' must not be blank")
-                                         .setOperationCode(OperationCode.ValidationError)
+                                         .setMessage("Field '$fieldName' must not be blank.")
+                                         .setDetails("field_name='$fieldName'")
+                                         .setStatus(OperationStatus.FAILURE)
                                          .build())
     }
 }
@@ -158,10 +183,12 @@ private val regex = Regex("^[a-z0-9_]*\$")
  */
 fun isPropertyName(fieldName: String, value: String) {
     if (!regex.containsMatchIn(value)) {
-        throw OperationException(OperationMessage.newBuilder()
-                                         .setMessage(
-                                                 "Name is invalid for field '$fieldName'. A property name can only contain 'a-z', '0-9' and '_' characters")
-                                         .setOperationCode(OperationCode.ValidationError)
-                                         .build())
+        throw OperationException(
+                OperationMessage.newBuilder()
+                        .setMessage(
+                                "Name is invalid for field '$fieldName'. A property name can only contain 'a-z', '0-9' and '_' characters.")
+                        .setDetails("field_name='$fieldName'")
+                        .setStatus(OperationStatus.FAILURE)
+                        .build())
     }
 }

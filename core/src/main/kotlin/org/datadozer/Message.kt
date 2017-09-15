@@ -1,6 +1,7 @@
 package org.datadozer
 
 import org.datadozer.models.OperationMessage
+import org.datadozer.models.OperationStatus
 
 /*
  * Licensed to DataDozer under one or more contributor
@@ -26,7 +27,7 @@ object Message {
         return (OperationMessage.newBuilder()
                 .setMessage("Data cannot be parsed for the field '$fieldName'.")
                 .setDetails("field_name='$fieldName',expected_data_type='$dataType',actual_value='$value'")
-                .setOperationCode(OperationCode.ValidationError)
+                .setStatus(OperationStatus.FAILURE)
                 .build())
     }
 
@@ -34,7 +35,7 @@ object Message {
         return (OperationMessage.newBuilder()
                 .setMessage("Range query is not supported by the field '$fieldName' of type '$dataType'.")
                 .setDetails("field_name='$fieldName',expected_data_type='$dataType'")
-                .setOperationCode(OperationCode.ValidationError)
+                .setStatus(OperationStatus.FAILURE)
                 .build())
     }
 
@@ -42,7 +43,7 @@ object Message {
         return (OperationMessage.newBuilder()
                 .setMessage("Set query is not supported by the field '$fieldName' of type '$dataType'.")
                 .setDetails("field_name='$fieldName',expected_data_type='$dataType'")
-                .setOperationCode(OperationCode.ValidationError)
+                .setStatus(OperationStatus.FAILURE)
                 .build())
     }
 
@@ -50,7 +51,23 @@ object Message {
         return (OperationMessage.newBuilder()
                 .setMessage("Exact query is not supported by the field '$fieldName' of type '$dataType'.")
                 .setDetails("field_name='$fieldName',expected_data_type='$dataType'")
-                .setOperationCode(OperationCode.ValidationError)
+                .setStatus(OperationStatus.FAILURE)
+                .build())
+    }
+
+    fun analyzerNotFound(analyzerName: String): OperationMessage {
+        return (OperationMessage.newBuilder()
+                .setMessage("Analyzer not found: '$analyzerName'.")
+                .setDetails("analyzer_name='$analyzerName'")
+                .setStatus(OperationStatus.FAILURE)
+                .build())
+    }
+
+    fun fieldIsMandatory(fieldName: String): OperationMessage {
+        return (OperationMessage.newBuilder()
+                .setMessage("Field:'$fieldName' is mandatory.")
+                .setDetails("field_name='$fieldName'")
+                .setStatus(OperationStatus.FAILURE)
                 .build())
     }
 }
