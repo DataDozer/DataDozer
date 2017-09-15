@@ -9,13 +9,10 @@ import org.apache.lucene.search.SortField
 import org.apache.lucene.search.TermQuery
 import org.apache.lucene.search.TermRangeQuery
 import org.apache.lucene.util.BytesRef
-import org.datadozer.Message
-import org.datadozer.OperationException
+import org.datadozer.*
 import org.datadozer.models.Document
 import org.datadozer.models.FieldValue
 import org.datadozer.models.Similarity
-import org.datadozer.parseTextUsingAnalyzer
-import org.datadozer.tryParse
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -38,11 +35,6 @@ import java.util.*
  * specific language governing permissions and limitations
  * under the License.
  */
-typealias LuceneAnalyzer = org.apache.lucene.analysis.Analyzer
-typealias LuceneDocument = org.apache.lucene.document.Document
-typealias LuceneField = org.apache.lucene.document.Field
-typealias LuceneFieldType = org.apache.lucene.document.FieldType
-typealias SchemaName = String
 
 val stringDefaultValue = "null"
 
@@ -150,6 +142,18 @@ data class FieldSchema(
  * dependent upon the type information
  */
 abstract class IndexField {
+    abstract val dataTypeName: String
+    abstract val defaultFieldName: String?
+    abstract val sortFieldType: SortField.Type
+    abstract val defaultStringValue: String
+    abstract val needsExtraStoreField: Boolean
+    abstract val isNumeric: Boolean
+    abstract val supportsAnalyzer: Boolean
+    abstract val storedOnly: Boolean
+    abstract val minimumStringValue: String
+    abstract val maximumStringValue: String
+    abstract val autoPopulated: Boolean
+
     abstract fun toInternalString(fieldValue: String): String
 
     /**
@@ -197,6 +201,38 @@ abstract class IndexField {
  * instance could be cached. Any Index specific information should go to FieldSchema.
  */
 class FieldType<T>(val properties: FieldProperties<T>) : IndexField() {
+    override val dataTypeName: String
+        get() = properties.dataTypeName
+
+    override val defaultFieldName: String?
+        get() = properties.defaultFieldName
+
+    override val sortFieldType: SortField.Type
+        get() = properties.sortFieldType
+
+    override val defaultStringValue: String
+        get() = properties.defaultStringValue
+
+    override val needsExtraStoreField: Boolean
+        get() = properties.needsExtraStoreField
+
+    override val isNumeric: Boolean
+        get() = properties.isNumeric
+
+    override val supportsAnalyzer: Boolean
+        get() = properties.supportsAnalyzer
+
+    override val storedOnly: Boolean
+        get() = properties.storedOnly
+
+    override val minimumStringValue: String
+        get() = properties.minimumStringValue
+
+    override val maximumStringValue: String
+        get() = properties.maximumStringValue
+
+    override val autoPopulated: Boolean
+        get() = properties.autoPopulated
 
     private val p = properties
 
@@ -706,7 +742,7 @@ object BoolField {
 }
 
 object StoredField {
-    private val info = FieldProperties(
+    val info = FieldProperties(
             dataTypeName = "Stored",
             defaultFieldName = null,
             sortFieldType = SortField.Type.SCORE,
@@ -755,6 +791,15 @@ object IdField {
     )
 
     val INSTANCE = FieldType(info)
+    val SCHEMA = FieldSchema(
+            fieldName = info.defaultFieldName!!,
+            schemaName = info.defaultFieldName!!,
+            docValues = false,
+            fieldType = INSTANCE,
+            similarity = Similarity.BM25,
+            analyzers = null,
+            fieldOrder = 0
+    )
 }
 
 /**
@@ -769,6 +814,15 @@ object ModifyIndex {
     )
 
     val INSTANCE = FieldType(info)
+    val SCHEMA = FieldSchema(
+            fieldName = info.defaultFieldName!!,
+            schemaName = info.defaultFieldName!!,
+            docValues = true,
+            fieldType = INSTANCE,
+            similarity = Similarity.BM25,
+            analyzers = null,
+            fieldOrder = 1
+    )
 }
 
 /**
@@ -785,4 +839,57 @@ object TimeStampField {
 
     private val dateFormat = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
     val INSTANCE = FieldType(info)
+    val SCHEMA = FieldSchema(
+            fieldName = info.defaultFieldName!!,
+            schemaName = info.defaultFieldName!!,
+            docValues = true,
+            fieldType = INSTANCE,
+            similarity = Similarity.BM25,
+            analyzers = null,
+            fieldOrder = -1
+    )
+}
+
+/**
+ * Log field is an internal field which is used to maintain the transaction
+ * log. The advantage of saving the transaction log in the index is that it
+ * is straight forward to sync the replicas and slave from the index using the
+ * modify index. There is a minimal disk space overhead when saving the transaction
+ * log in the index.
+ *
+ * Complete documents are not saved in the log as they are already part of the
+ * Lucene document. we only save important metadata which helps us in identifying
+ * the transaction information.
+ */
+object LogField {
+    private val info = org.datadozer.index.StoredField.info.copy(
+            defaultFieldName = "__log",
+            autoPopulated = true
+    )
+
+    val INSTANCE = FieldType(info)
+    val SCHEMA = FieldSchema(
+            fieldName = info.defaultFieldName!!,
+            schemaName = info.defaultFieldName!!,
+            docValues = false,
+            fieldType = INSTANCE,
+            similarity = Similarity.BM25,
+            analyzers = null,
+            fieldOrder = 2
+    )
+}
+
+/**
+ * Internal field used to represent the type of transaction that was
+ * performed when the related document was added to the index. This
+ * can be broadly classified into document and index related operations.
+ * Index related operations deal with index schema changes while document
+ * related changes are related to creating/updating and deleting of the
+ * documents.
+ *
+ * This field is also used to filter out the deleted and non document related
+ * results from the search query.
+ */
+object TransactionTypeField {
+
 }
