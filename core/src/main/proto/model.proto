@@ -25,6 +25,7 @@ enum FieldDataType {
     IP6 = 12;
     LAT_LONG = 13;
     BOOLEAN = 14;
+    TIMESTAMP = 15;
 }
 
 // Corresponds to Lucene Index version. There will always be a default
@@ -51,6 +52,12 @@ enum Similarity {
     TFIDF = 1;
 }
 
+// Operation status of service call. It will always be set for an response message.
+enum OperationStatus {
+    SUCCESS = 0;
+    FAILURE = 1;
+}
+
 // Represents an operational message returned from the operation. This can be used to
 // represent both success and failure messages.
 message OperationMessage {
@@ -62,7 +69,7 @@ message OperationMessage {
     string details = 2;
 
     // Operation Code associated with the message.
-    string operation_code = 3;
+    OperationStatus status = 3;
 }
 
 // Tokenizer breaks up a stream of text into tokens, where each token is a sub-sequence
@@ -104,6 +111,27 @@ message Analyzer {
 message ShardConfiguration {
     // Total number of shards to be present in the given index.
     int32 shard_count = 1;
+}
+
+// Overrall status of the Index
+enum IndexStatus {
+    OFFLINE = 0;
+    OPENING = 1;
+    LOCAL_RECOVERY = 2;
+    REMOTE_RECOVERY = 3;
+    ONLINE_MASTER = 4;
+    ONLINE_SLAVE = 5;
+    ONLINE_REPLICA = 6;
+    CLOSING = 7;
+}
+
+// Configuration option for stored fields.
+enum CompressionMode {
+    // Trade compression ratio for retrieval speed.
+    OPTIMIZE_FOR_SPEED = 0;
+
+    // Trade retrieval speed for compression ratio.
+    OPTIMIZE_FOR_SIZE = 1;
 }
 
 // Allows to control various Index related writerSettings.
@@ -160,6 +188,31 @@ message IndexConfiguration {
 
     // Signifies if the index supports modification of data.
     google.protobuf.BoolValue allow_writes = 14;
+
+    // Default similarity for the index
+    Similarity default_similarity = 15;
+
+    // Information about merges, deletes and a
+    // message when maxFieldLength is reached will be printed
+    // to index specific log file.
+    google.protobuf.BoolValue verbose_mode = 16;
+
+    // If enabled then the user can use optimistic locking to update a
+    // given record. This will use the modify index field to provide
+    // optimistic lock.
+    // Note: There is a slight performance penalty of using this feature
+    // as the id of the records will be saved in an internal cache.
+    google.protobuf.BoolValue support_optimistic_concurrency = 17;
+
+    // Data type that will be used by the ID key
+    IdKeyDataType id_key_datatype = 18;
+
+    // If Id field should support sorting. This is also required for
+    // range query generation.
+    google.protobuf.BoolValue allow_sort_on_id_field = 19;
+
+    // Compression configuration option for stored fields.
+    CompressionMode compression_mode = 20;
 }
 
 // A single indexable field
@@ -196,7 +249,8 @@ message Index {
     // Represents if an Index is active or not?
     google.protobuf.BoolValue active = 4;
 
-    // Predefined query
+    // Shard configuration
+    ShardConfiguration shardConfiguration = 5;
 }
 
 message Integers {
@@ -211,6 +265,7 @@ message Strings {
     repeated string strings = 1;
 }
 
+// FieldValue for a field in a document
 message FieldValue {
     oneof value {
         string string_value = 1;
@@ -222,6 +277,24 @@ message FieldValue {
         Integers integers_value = 7;
         Floats floats_value = 8;
         Strings strings_value = 9;
+    }
+}
+
+// Data type to be used by the ID Key
+enum IdKeyDataType {
+    STRING = 0;
+    INT_32 = 1;
+    INT_64 = 2;
+    BYTES = 3;
+}
+
+// Supported values for ID field
+message IdValue {
+    oneof value {
+        string string_value = 1;
+        int32 integer_value = 2;
+        int64 long_value = 3;
+        bytes bytes_value = 4;
     }
 }
 
@@ -249,13 +322,7 @@ message Document {
     string index_name = 1;
 
     // The unique id of the document
-    string id = 2;
-
-    /*oneof id {
-        string string_id = 2;
-        int32 int_id = 3;
-        int64 long_id = 4;
-    }*/
+    IdValue id = 2;
 
     // Represents the operation number associated with the operation in the global order
     // of the operations. This allows causal ordering of the events. A documents with a lower

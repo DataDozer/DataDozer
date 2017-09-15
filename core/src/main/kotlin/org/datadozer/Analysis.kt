@@ -1,6 +1,9 @@
 package org.datadozer
 
-import org.datadozer.index.LuceneAnalyzer
+import org.apache.lucene.analysis.custom.CustomAnalyzer
+import org.apache.lucene.analysis.util.TokenFilterFactory
+import org.apache.lucene.analysis.util.TokenizerFactory
+import org.datadozer.models.Analyzer
 import java.io.StringReader
 
 /*
@@ -39,4 +42,44 @@ fun parseTextUsingAnalyzer(analyzer: LuceneAnalyzer, fieldName: String, queryTex
         }
         source.end()
     }
+}
+
+/**
+ * Creates a Lucene analyzer from the DataDozer analyzer definition
+ */
+fun getCustomAnalyzer(analyzer: Analyzer): LuceneAnalyzer {
+    val builder = CustomAnalyzer.builder()
+    builder.withTokenizer(analyzer.tokenizer.tokenizerName, analyzer.tokenizer.parametersMap)
+    for (filter in analyzer.filtersList) {
+        builder.addTokenFilter(filter.filterName, filter.parametersMap)
+    }
+    return builder.build()
+}
+
+/**
+ * Returns keyword analyzer
+ */
+fun getKeywordAnalyzer(): LuceneAnalyzer {
+    return CustomAnalyzer.builder()
+            .withTokenizer("keyword")
+            .addTokenFilter("lowercase")
+            .build()
+}
+
+/**
+ * Checks if a given filter is present in the system and returns true if
+ * it is found.
+ */
+fun checkFilterExists(filterName: String): Boolean {
+    val filters = TokenFilterFactory::availableTokenFilters.invoke()
+    return filters.contains(filterName)
+}
+
+/**
+ * Checks if a given tokenizer is present in the system and returns true if
+ * it is found.
+ */
+fun checkTokenizerExists(filterName: String): Boolean {
+    val tokenizers = TokenizerFactory::availableTokenizers.invoke()
+    return tokenizers.contains(filterName)
 }

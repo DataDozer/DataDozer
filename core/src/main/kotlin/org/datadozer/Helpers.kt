@@ -1,5 +1,7 @@
 package org.datadozer
 
+import com.google.protobuf.GeneratedMessageV3
+import java.io.*
 import java.nio.ByteBuffer
 import java.util.*
 
@@ -30,4 +32,25 @@ fun uuidToByteArray(id: UUID): ByteArray {
     bb.putLong(id.mostSignificantBits)
     bb.putLong(id.leastSignificantBits)
     return bb.array()
+}
+
+/**
+ * Writes a given protobuf message to file
+ */
+fun writeFile(file: File, message: GeneratedMessageV3) {
+    val writer = BufferedOutputStream(FileOutputStream(file))
+    writer.use {
+        message.writeTo(writer)
+        writer.flush()
+    }
+}
+
+/**
+ * Reads a given file and deserializes it using the passed parser method
+ */
+fun <T> readFile(file: File, parseFrom: (ByteArray) -> T): T {
+    val writer = BufferedInputStream(FileInputStream(file))
+    writer.use {
+        return parseFrom(writer.readBytes())
+    }
 }
