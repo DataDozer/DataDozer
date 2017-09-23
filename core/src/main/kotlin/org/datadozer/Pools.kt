@@ -43,8 +43,8 @@ fun threadPoolExecutorProvider(): ThreadPoolExecutor {
     }
 
     return ThreadPoolExecutor(AvailableProcessors, AvailableProcessors,
-            0L, TimeUnit.MILLISECONDS,
-            LinkedBlockingQueue<Runnable>(1000), threadFactory)
+                              0L, TimeUnit.MILLISECONDS,
+                              LinkedBlockingQueue<Runnable>(1000), threadFactory)
 }
 
 /**
@@ -130,6 +130,19 @@ class SingleInstancePerThreadObjectPool<T : Any?>(private val provider: () -> T)
     }
 
     /**
+     * Borrow an object from the pool and pass it to an action and automatically
+     * return the object back to the pool
+     */
+    inline fun borrow(block: (T) -> Unit) {
+        val borrowed = borrowObject()
+        try {
+            block(borrowed)
+        } finally {
+            returnObject(borrowed)
+        }
+    }
+
+    /**
      * Return an borrowed object to the pool. Never return an object twice as it will result
      * in an error.
      */
@@ -140,7 +153,8 @@ class SingleInstancePerThreadObjectPool<T : Any?>(private val provider: () -> T)
 
         val threadId = slotNumber ?: getThreadId()
         if (!borrowStatus[threadId]) {
-            logger.warn("Expecting object pool thread slot to be empty. Make sure you are not returning twice or returning a non pooled object.")
+            logger.warn(
+                    "Expecting object pool thread slot to be empty. Make sure you are not returning twice or returning a non pooled object.")
         }
 
         // Irrespective of whether the item was returned twice the best way to recover from the situation is to
