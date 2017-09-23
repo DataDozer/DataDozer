@@ -9,11 +9,11 @@ option java_package = "org.datadozer.models";
 option java_outer_classname = "DataDozerModel";
 option objc_class_prefix = "DZM";
 
-// Data type of the field
+// Data type of the fields
 enum FieldDataType {
     TEXT = 0;
     KEYWORD = 1;
-    INT_POINT = 3;
+    INTEGER_POINT = 3;
     LONG_PONT = 4;
     FLOAT_POINT = 5;
     DOUBLE_POINT = 6;
@@ -73,7 +73,7 @@ message OperationMessage {
 }
 
 // Tokenizer breaks up a stream of text into tokens, where each token is a sub-sequence
-// of the characters in the text. An analyzer is aware of the field it is configured
+// of the characters in the text. An analyzer is aware of the fields it is configured
 // for, but a tokenizer is not.
 message Tokenizer {
     // Name of the tokenizer
@@ -198,7 +198,7 @@ message IndexConfiguration {
     google.protobuf.BoolValue verbose_mode = 16;
 
     // If enabled then the user can use optimistic locking to update a
-    // given record. This will use the modify index field to provide
+    // given record. This will use the modify index fields to provide
     // optimistic lock.
     // Note: There is a slight performance penalty of using this feature
     // as the id of the records will be saved in an internal cache.
@@ -207,7 +207,7 @@ message IndexConfiguration {
     // Data type that will be used by the ID key
     IdKeyDataType id_key_datatype = 18;
 
-    // If Id field should support sorting. This is also required for
+    // If Id fields should support sorting. This is also required for
     // range query generation.
     google.protobuf.BoolValue allow_sort_on_id_field = 19;
 
@@ -215,15 +215,15 @@ message IndexConfiguration {
     CompressionMode compression_mode = 20;
 }
 
-// A single indexable field
+// A single indexable fields
 message Field {
-    // Name of the field
+    // Name of the fields
     string field_name = 1;
 
     // Field data type
     FieldDataType data_type = 2;
 
-    // Enable field sorting
+    // Enable fields sorting
     google.protobuf.BoolValue allow_sort = 3;
 
     // Analyzer to be used during indexing
@@ -232,8 +232,11 @@ message Field {
     // Analyzer to be used during searching
     google.protobuf.StringValue search_analyzer = 5;
 
-    // Similarity for the field
+    // Similarity for the fields
     Similarity similarity = 6;
+
+    // Allow multiple values for the field
+    google.protobuf.BoolValue multivalued = 7;
 }
 
 message Index {
@@ -253,49 +256,50 @@ message Index {
     ShardConfiguration shardConfiguration = 5;
 }
 
-message Integers {
-    repeated int32 integers = 1;
+message IntegerValues {
+    repeated int32 values = 1;
 }
 
-message Floats {
-    repeated float integers = 1;
+message LongValues {
+    repeated int64 values = 1;
 }
 
-message Strings {
-    repeated string strings = 1;
+message FloatValues {
+    repeated float values = 1;
 }
 
-// FieldValue for a field in a document
+message DoubleValues {
+    repeated float values = 1;
+}
+
+message StringValues {
+    repeated string values = 1;
+}
+
+// FieldValue for a fields in a document
 message FieldValue {
     oneof value {
         string string_value = 1;
         int32 integer_value = 2;
         int64 long_value = 3;
-        float float_value = 4;
-        double double_value = 5;
-        bool bool_value = 6;
-        Integers integers_value = 7;
-        Floats floats_value = 8;
-        Strings strings_value = 9;
+        bytes bytes_value = 4;
+        float float_value = 5;
+        double double_value = 6;
+        bool bool_value = 7;
+        IntegerValues integer_values = 8;
+        FloatValues float_values = 9;
+        StringValues string_values = 10;
+        LongValues long_values = 11;
+        DoubleValues double_values = 12;
     }
 }
 
 // Data type to be used by the ID Key
 enum IdKeyDataType {
     STRING = 0;
-    INT_32 = 1;
-    INT_64 = 2;
+    INTEGER = 1;
+    LONG = 2;
     BYTES = 3;
-}
-
-// Supported values for ID field
-message IdValue {
-    oneof value {
-        string string_value = 1;
-        int32 integer_value = 2;
-        int64 long_value = 3;
-        bytes bytes_value = 4;
-    }
 }
 
 // Additional information associated with a document which is only populated when
@@ -312,17 +316,19 @@ message SearchResultProperties {
 }
 
 // A document represents the basic unit of information which can be added or
-// retrieved from the index. A document consists of several fields. A field represents
+// retrieved from the index. A document consists of several fields. A fields represents
 // the actual data to be indexed. In database analogy an index can be considered as
 // a table while a document is a row of that table. Like a table a Datadozer document
-// requires a fix schema and all fields should have a field type.
+// requires a fix schema and all fields should have a fields type.
 message Document {
 
     // Name of the index to which the document belongs
     string index_name = 1;
 
-    // The unique id of the document
-    IdValue id = 2;
+    // The unique id of the document. This can be specified using the FieldValue but only
+    // a subset of data type is supported by the ID fields. The data type of the id fields
+    // is defined by the IdFieldType property in IndexConfiguration.
+    FieldValue id = 2;
 
     // Represents the operation number associated with the operation in the global order
     // of the operations. This allows causal ordering of the events. A documents with a lower
@@ -330,12 +336,12 @@ message Document {
     // is used for optimistic concurrency control.
     int64 modify_index = 5;
 
-    // Since we are not taking the field names as part of values we use this hash to identifty
+    // Since we are not taking the fields names as part of values we use this hash to identifty
     // the order in which fields are passed to the server.
     string field_order_hash = 6;
 
     // Field Values associated with the document
-    repeated FieldValue fields = 7;
+    map<string, FieldValue> fields = 7;
 
     // Additional information associated with a document which is only populated when
     // search results are returned.
