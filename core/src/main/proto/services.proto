@@ -1,0 +1,61 @@
+syntax = "proto3";
+package datadozer;
+import "google/protobuf/wrappers.proto";
+import "model.proto";
+
+option csharp_namespace = "Datadozer.Services";
+option cc_enable_arenas = true;
+option java_multiple_files = true;
+option java_package = "org.datadozer.services";
+option java_outer_classname = "DataDozerServices";
+option objc_class_prefix = "DZS";
+
+message GetDocumentRequest {
+    FieldValue id = 1;
+    string index_name = 2;
+}
+
+message GetDocumentResponse {
+    Document document = 1;
+    OperationMessage result = 2;
+}
+
+message AddOrUpdateDocumentRequest {
+    Document document = 1;
+}
+
+message AddOrUpdateDocumentResponse {
+    OperationMessage result = 1;
+}
+
+message AddDocumentRequest {
+    Document document = 1;
+}
+
+message AddDocumentResponse {
+    OperationMessage result = 1;
+}
+
+message DeleteDocumentRequest {
+    FieldValue id = 1;
+    string index_name = 2;
+}
+
+message DeleteDocumentResponse {
+    OperationMessage result = 1;
+}
+
+service DocumentService {
+    // Get a document from the index
+    rpc GetDocument (GetDocumentRequest) returns (GetDocumentResponse);
+
+    // Add or update a document in the index
+    rpc AddOrUpdateDocument (AddOrUpdateDocumentRequest) returns (AddOrUpdateDocumentResponse);
+
+    // Add or update a document in the index
+    rpc AddDocument (AddDocumentRequest) returns (AddDocumentResponse);
+
+    // Delete a document from the index
+    rpc DeleteDocument (DeleteDocumentRequest) returns (DeleteDocumentResponse);
+
+}
