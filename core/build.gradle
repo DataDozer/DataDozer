@@ -22,9 +22,15 @@ buildscript {
 dependencies {
     // lucene
     compile "org.apache.lucene:lucene-core:$lucene"
+    compile "org.apache.lucene:lucene-facet:$lucene"
+    compile "org.apache.lucene:lucene-expressions:$lucene"
     compile "org.apache.lucene:lucene-analyzers-common:$lucene"
+    compile "org.apache.lucene:lucene-analyzers-phonetic:$lucene"
+    compile "org.apache.lucene:lucene-analyzers-icu:$lucene"
     compile "org.apache.lucene:lucene-backward-codecs:$lucene"
+    compile "org.apache.lucene:lucene-codecs:$lucene"
     compile "org.apache.lucene:lucene-grouping:$lucene"
+    compile "org.apache.lucene:lucene-classification:$lucene"
     compile "org.apache.lucene:lucene-highlighter:$lucene"
     compile "org.apache.lucene:lucene-join:$lucene"
     compile "org.apache.lucene:lucene-memory:$lucene"
@@ -62,6 +68,21 @@ protobuf {
                 // To generate deprecated interfaces and static bindService method,
                 // turn the enable_deprecated option to true below:
                 option 'enable_deprecated=false'
+            }
+        }
+
+        // https://github.com/google/protobuf/issues/2054
+        all().each { task ->
+            task.doLast {
+                ant.replaceregexp(
+                        match: '(.*\\.valueOf.*)',
+                        replace: '    @SuppressWarnings("deprecation")\n\\1',
+                        flags: 'g',
+                        byline: true
+                ) {
+                    fileset(
+                            dir: "${protobuf.generatedFilesBaseDir}/main/java")
+                }
             }
         }
     }
