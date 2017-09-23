@@ -1,5 +1,7 @@
 package org.datadozer.index
 
+import org.datadozer.index.fields.FieldSchema
+
 /*
  * Licensed to DataDozer under one or more contributor
  * license agreements. See the NOTICE file distributed with
@@ -20,11 +22,11 @@ package org.datadozer.index
  */
 
 /**
- * A list and map combination designed for holding the field schemas. This
- * will provide both fast iteration and lookup over the field schema values.
+ * A list and map combination designed for holding the fields schemas. This
+ * will provide both fast iteration and lookup over the fields schema values.
  * NOTE: This is not a general purpose collection.
  */
-class FieldCollection() : Map<String, FieldSchema>, Collection<FieldSchema> {
+class FieldCollection : Map<String, FieldSchema>, Collection<FieldSchema> {
     private val map = HashMap<String, FieldSchema>()
     private val arrayList = ArrayList<FieldSchema>()
     private var locked = false

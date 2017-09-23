@@ -2,6 +2,7 @@ package org.datadozer.index
 
 import org.datadozer.SingleInstancePerThreadObjectPool
 import org.datadozer.models.Document
+import org.datadozer.models.FieldValue
 import org.datadozer.models.TransactionLogEntryType
 import org.datadozer.threadPoolExecutorProvider
 import org.junit.AfterClass
@@ -42,8 +43,11 @@ class TransactionLogTests {
     @Test
     fun `Can read write transactions using multiple threads`() {
         val runnable = Runnable {
-            var value = pool.borrowObject()
-            val doc = Document.newBuilder().setId("1").setIndexName("index1").build()
+            val value = pool.borrowObject()
+            val doc = Document.newBuilder()
+                    .setId(FieldValue.newBuilder().setStringValue("1"))
+                    .setIndexName("index1")
+                    .build()
             val txEntry = transactionLogEntryFactory(1, transactionId.getAndIncrement(),
                                                      TransactionLogEntryType.DOC_DELETE, doc)
             value.appendEntry(txEntry, 1)
@@ -51,7 +55,7 @@ class TransactionLogTests {
         }
 
         val tasks = List(999, { _ -> Executors.callable(runnable) })
-        var result = threadPool.invokeAll(tasks)
+        val result = threadPool.invokeAll(tasks)
 
         for (res in result) {
             res.get()
@@ -73,7 +77,10 @@ class TransactionLogTests {
         val path = Files.createTempDirectory(null)
         val sut = TransactionWriter(path.toFile(), settings)
         for (i in 1 until 100) {
-            val doc = Document.newBuilder().setId(i.toString()).setIndexName("index1").build()
+            val doc = Document.newBuilder()
+                    .setId(FieldValue.newBuilder().setIntegerValue(i))
+                    .setIndexName("index1")
+                    .build()
             val entry = transactionLogEntryFactory(1, i.toLong(),
                                                    TransactionLogEntryType.DOC_DELETE, doc)
             sut.appendEntry(entry, 1)

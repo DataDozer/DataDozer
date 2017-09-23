@@ -14,6 +14,7 @@ import org.apache.lucene.store.*
 import org.datadozer.LuceneDirectory
 import org.datadozer.Message
 import org.datadozer.OperationException
+import org.datadozer.index.fields.*
 import org.datadozer.models.*
 import org.datadozer.services.AnalyzerService
 import org.datadozer.validate
@@ -54,6 +55,13 @@ class IndexSettings private constructor(
         val shardConfiguration: ShardConfiguration
 ) {
 
+    val shardCount = shardConfiguration.shardCount
+    val optimisticConcurrency = if (indexConfiguration.hasSupportOptimisticConcurrency()) {
+        indexConfiguration.supportOptimisticConcurrency.value
+    } else {
+        false
+    }
+
     class Builder(
             private val index: Index,
             private val baseDir: File,
@@ -87,8 +95,8 @@ class IndexSettings private constructor(
         }
 
         /**
-         * Creates per field analyzer for an index from the index field data. These analyzers
-         * are used for searching and indexing rather than the global field analyzer.
+         * Creates per fields analyzer for an index from the index fields data. These analyzers
+         * are used for searching and indexing rather than the global fields analyzer.
          */
         private fun buildAnalyzer(isIndexAnalyzer: Boolean): AnalyzerWrapper {
             val map = ConcurrentHashMap<String, Analyzer>()
@@ -110,13 +118,13 @@ class IndexSettings private constructor(
         }
 
         /**
-         * Returns a field instance associated with a field data type
+         * Returns a fields instance associated with a fields data type
          */
         private fun getFieldType(fieldType: FieldDataType): IndexField {
             return when (fieldType) {
                 FieldDataType.TEXT -> TextField.INSTANCE
                 FieldDataType.KEYWORD -> KeywordField.INSTANCE
-                FieldDataType.INT_POINT -> IntField.INSTANCE
+                FieldDataType.INTEGER_POINT -> IntField.INSTANCE
                 FieldDataType.LONG_PONT -> LongField.INSTANCE
                 FieldDataType.FLOAT_POINT -> FloatField.INSTANCE
                 FieldDataType.DOUBLE_POINT -> DoubleField.INSTANCE
@@ -166,7 +174,12 @@ class IndexSettings private constructor(
                         null
                     },
                     similarity = field.similarity,
-                    fieldType = dataType
+                    fieldType = dataType,
+                    multiValued = if (field.hasMultivalued()) {
+                        field.multivalued.value
+                    } else {
+                        false
+                    }
             )
         }
 

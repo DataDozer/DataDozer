@@ -26,18 +26,18 @@ import java.util.concurrent.ConcurrentHashMap
  */
 
 /**
- * Wraps Lucene Analyzers in an dictionary to create a per field analyzer
+ * Wraps Lucene Analyzers in an dictionary to create a per fields analyzer
  */
 class AnalyzerWrapper(private val map: ConcurrentHashMap<String, Analyzer>,
                       private val defaultAnalyzer: Analyzer = StandardAnalyzer()) :
         DelegatingAnalyzerWrapper(Analyzer.PER_FIELD_REUSE_STRATEGY) {
 
     /**
-     * Retrieves the wrapped Analyzer appropriate for analyzing the field with
+     * Retrieves the wrapped Analyzer appropriate for analyzing the fields with
      * the given name
      *
-     * @param fieldName Name of the field which is to be analyzed
-     * @return Analyzer for the field with the given name.  Assumed to be non-null
+     * @param fieldName Name of the fields which is to be analyzed
+     * @return Analyzer for the fields with the given name.  Assumed to be non-null
      */
     override fun getWrappedAnalyzer(fieldName: String?): Analyzer {
         return map.getOrDefault(fieldName, defaultAnalyzer)

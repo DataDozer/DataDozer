@@ -6,6 +6,8 @@ import org.apache.lucene.search.ReferenceManager
 import org.apache.lucene.search.SearcherFactory
 import org.apache.lucene.search.SearcherManager
 import org.apache.lucene.store.Directory
+import org.datadozer.LuceneDocument
+import org.datadozer.index.fields.ModifyIndex
 import org.datadozer.logProvider
 import org.datadozer.models.IndexConfiguration
 
@@ -115,5 +117,12 @@ class ShardWriter(
      */
     fun removeRefreshListener(item: ReferenceManager.RefreshListener) {
         searcherManager.removeListener(item)
+    }
+
+    /**
+     * Adds a document to this index.
+     */
+    fun addDocument(document: LuceneDocument) {
+        indexWriter.addDocument(document)
     }
 }
