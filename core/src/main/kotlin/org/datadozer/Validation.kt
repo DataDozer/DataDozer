@@ -179,14 +179,14 @@ fun notBlank(fieldName: String, value: String) {
 private val regex = Regex("^[a-z0-9_]*\$")
 
 /**
- * Validates if the field name satisfies the naming rules
+ * Validates if the fields name satisfies the naming rules
  */
 fun isPropertyName(fieldName: String, value: String) {
     if (!regex.containsMatchIn(value)) {
         throw OperationException(
                 OperationMessage.newBuilder()
                         .setMessage(
-                                "Name is invalid for field '$fieldName'. A property name can only contain 'a-z', '0-9' and '_' characters.")
+                                "Name is invalid for fields '$fieldName'. A property name can only contain 'a-z', '0-9' and '_' characters.")
                         .setDetails("field_name='$fieldName'")
                         .setStatus(OperationStatus.FAILURE)
                         .build())
