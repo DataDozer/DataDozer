@@ -4,8 +4,8 @@ buildscript {
         kotlin_compiler = '1.1.50'
         lucene = "6.6.1"
         log4j = '2.8.2'
-        junit = '5.0.0-RC3'
-        junit_runner = '1.0.0-RC3'
+        junit = '5.0.0'
+        junit_runner = '1.0.0'
         grpc = '1.4.0'
         grpcVersion = '1.4.0'
         sourceCompatibility = 1.8
