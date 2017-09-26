@@ -1,23 +1,21 @@
 // Default query parser for DataDozer
-grammar Query;
+grammar FlexQuery;
 
 @header {
 package org.datadozer.parser;
 }
 
 statement
-    : query+ EOF;
-
-query
-    : clause
-    | group
-    ;
+    : (query | group)+ EOF;
 
 /*
 Simple clauses which can contain multiple values
 */
-clause
-    : occur? ID? COLON ID BRACE_OPEN clause_value (COMMA clause_value)* (COMMA keyvalue_pair)* BRACE_CLOSE
+query
+    : occur=(PLUS|MINUS)? fieldName=ID? COLON queryName=ID
+        BRACE_OPEN
+            value (COMMA value)* (COMMA properties)?
+        BRACE_CLOSE
     ;
 
 /*
@@ -25,31 +23,28 @@ In group clause the field name is optional as you can get it from the
 name of the group.
 */
 group
-    : ID? (COLON ID)? CURLY_OPEN query+ keyvalue_pair* CURLY_CLOSE;
-
-occur
-    : PLUS
-    | MINUS
-    ;
-
-clause_value
-    : occur? value keyvalue_pair*
-    ;
+    : (SQUARE_OPEN groupName=ID (COLON groupQuery=ID)? SQUARE_CLOSE)?
+        CURLY_OPEN
+            (query | group)+ properties?
+        CURLY_CLOSE;
 
 value
-    : STRING
-    | FLOAT
-    | NUMBER
-    | variable
-    | TRUE
-    | FALSE
+    : occur=(PLUS|MINUS)?
+        ( STRING
+        | FLOAT
+        | NUMBER
+        | AT variableName=ID
+        | TRUE
+        | FALSE
+        )
+      properties?
     ;
 
-variable
-    : AT ID;
+property
+    : ID propertyName=EQ propertyValue=(NUMBER | STRING);
 
-keyvalue_pair
-    : ID EQ (NUMBER | STRING);
+properties
+    : SQUARE_OPEN property (COMMA property)* SQUARE_CLOSE;
 
 // LEXER
 /**
@@ -64,6 +59,8 @@ BRACE_OPEN      : '(';
 BRACE_CLOSE     : ')';
 CURLY_OPEN      : '{';
 CURLY_CLOSE     : '}';
+SQUARE_OPEN     : '[';
+SQUARE_CLOSE    : ']';
 PLUS            : '+';
 MINUS           : '-';
 AT              : '@';
@@ -89,3 +86,4 @@ DIGIT           : '0' .. '9';
 
 fragment
 ESC             : '\\\'' | '\\\\';
+
