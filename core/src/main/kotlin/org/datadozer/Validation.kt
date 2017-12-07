@@ -1,5 +1,6 @@
 package org.datadozer
 
+import org.datadozer.models.KeyValue
 import org.datadozer.models.OperationMessage
 import org.datadozer.models.OperationStatus
 
@@ -50,6 +51,30 @@ class OperationException(val operationMessage: OperationMessage) : Exception(ope
 
     override val message: String?
         get() = operationMessage.toString()
+}
+
+/**
+ * Add a given key value pair to the operation message
+ */
+fun OperationMessage.Builder.addKeyValue(key: String, value: Any): OperationMessage.Builder {
+    this.addDetails(KeyValue.newBuilder().setKey(key).setValue(value.toString()).build())
+    return this
+}
+
+/**
+ * Sets the operation status to failure
+ */
+fun OperationMessage.Builder.setFailureStatus(): OperationMessage.Builder {
+    this.status = OperationStatus.FAILURE
+    return this
+}
+
+/**
+ * Sets the operation status to success
+ */
+fun OperationMessage.Builder.setSuccessStatus(): OperationMessage.Builder {
+    this.status = OperationStatus.SUCCESS
+    return this
 }
 
 /**
@@ -108,8 +133,10 @@ fun <T : Comparable<T>> greaterThan(fieldName: String, lowerLimit: T, value: T) 
         throw OperationException(
                 OperationMessage.newBuilder()
                         .setMessage("Field '$fieldName' must be greater than '$lowerLimit', but found '$value'.")
-                        .setDetails("field_name='$fieldName',lower_limit='$lowerLimit',value='$value'")
-                        .setStatus(OperationStatus.FAILURE)
+                        .addKeyValue(FIELD_NAME, fieldName)
+                        .addKeyValue(LOWER_LIMIT, lowerLimit)
+                        .addKeyValue(VALUE, value)
+                        .setFailureStatus()
                         .build())
     }
 }
@@ -120,8 +147,10 @@ fun <T : Comparable<T>> greaterThanEqual(fieldName: String, lowerLimit: T, value
                 OperationMessage.newBuilder()
                         .setMessage(
                                 "Field '$fieldName' must be greater than or equal to '$lowerLimit', but found '$value'")
-                        .setDetails("field_name='$fieldName',lower_limit='$lowerLimit',value='$value'")
-                        .setStatus(OperationStatus.FAILURE)
+                        .addKeyValue(FIELD_NAME, fieldName)
+                        .addKeyValue(LOWER_LIMIT, lowerLimit)
+                        .addKeyValue(VALUE, value)
+                        .setFailureStatus()
                         .build())
     }
 }
@@ -131,8 +160,10 @@ fun <T : Comparable<T>> lessThan(fieldName: String, upperLimit: T, value: T) {
         throw OperationException(
                 OperationMessage.newBuilder()
                         .setMessage("Field '$fieldName' must be less than '$upperLimit', but found '$value'")
-                        .setDetails("field_name='$fieldName',upper_limit='$upperLimit',value='$value'")
-                        .setStatus(OperationStatus.FAILURE)
+                        .addKeyValue(FIELD_NAME, fieldName)
+                        .addKeyValue(UPPER_LIMIT, upperLimit)
+                        .addKeyValue(VALUE, value)
+                        .setFailureStatus()
                         .build())
     }
 }
@@ -143,8 +174,10 @@ fun <T : Comparable<T>> lessThanEqual(fieldName: String, upperLimit: T, value: T
                 OperationMessage.newBuilder()
                         .setMessage(
                                 "Field '$fieldName' must be less than or equal to '$upperLimit', but found '$value'")
-                        .setDetails("field_name='$fieldName',upper_limit='$upperLimit',value='$value'")
-                        .setStatus(OperationStatus.FAILURE)
+                        .addKeyValue(FIELD_NAME, fieldName)
+                        .addKeyValue(UPPER_LIMIT, upperLimit)
+                        .addKeyValue(VALUE, value)
+                        .setFailureStatus()
                         .build())
     }
 }
@@ -157,8 +190,9 @@ fun hasDuplicates(groupName: String, fieldName: String, input: Array<String>) {
         throw OperationException(
                 OperationMessage.newBuilder()
                         .setMessage("A duplicate entry '$fieldName' has been found in the group '$groupName'")
-                        .setDetails("field_name='$fieldName',group_name='$groupName'")
-                        .setStatus(OperationStatus.FAILURE)
+                        .addKeyValue(FIELD_NAME, fieldName)
+                        .addKeyValue(GROUP_NAME, groupName)
+                        .setFailureStatus()
                         .build())
     }
 }
@@ -170,8 +204,8 @@ fun notBlank(fieldName: String, value: String) {
     if (value.isBlank()) {
         throw OperationException(OperationMessage.newBuilder()
                                          .setMessage("Field '$fieldName' must not be blank.")
-                                         .setDetails("field_name='$fieldName'")
-                                         .setStatus(OperationStatus.FAILURE)
+                                         .addKeyValue(FIELD_NAME, fieldName)
+                                         .setFailureStatus()
                                          .build())
     }
 }
@@ -187,8 +221,8 @@ fun isPropertyName(fieldName: String, value: String) {
                 OperationMessage.newBuilder()
                         .setMessage(
                                 "Name is invalid for fields '$fieldName'. A property name can only contain 'a-z', '0-9' and '_' characters.")
-                        .setDetails("field_name='$fieldName'")
-                        .setStatus(OperationStatus.FAILURE)
+                        .addKeyValue(FIELD_NAME, fieldName)
+                        .setFailureStatus()
                         .build())
     }
 }

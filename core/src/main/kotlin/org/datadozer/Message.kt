@@ -1,7 +1,6 @@
 package org.datadozer
 
 import org.datadozer.models.OperationMessage
-import org.datadozer.models.OperationStatus
 
 /*
  * Licensed to DataDozer under one or more contributor
@@ -30,48 +29,52 @@ object Message {
     fun dataCannotBeParsed(fieldName: String, dataType: String, value: String): OperationMessage {
         return OperationMessage.newBuilder()
                 .setMessage("Data cannot be parsed for the fields '$fieldName'.")
-                .setDetails("field_name='$fieldName',expected_data_type='$dataType',actual_value='$value'")
-                .setStatus(OperationStatus.FAILURE)
+                .addKeyValue(FIELD_NAME, fieldName)
+                .addKeyValue(EXPECTED_DATA_TYPE, dataType)
+                .setFailureStatus()
                 .build()
     }
 
     fun rangeQueryNotSupported(fieldName: String, dataType: String): OperationMessage {
         return OperationMessage.newBuilder()
                 .setMessage("Range query is not supported by the fields '$fieldName' of type '$dataType'.")
-                .setDetails("field_name='$fieldName',expected_data_type='$dataType'")
-                .setStatus(OperationStatus.FAILURE)
+                .addKeyValue(FIELD_NAME, fieldName)
+                .addKeyValue(EXPECTED_DATA_TYPE, dataType)
+                .setFailureStatus()
                 .build()
     }
 
     fun setQueryNotSupported(fieldName: String, dataType: String): OperationMessage {
         return OperationMessage.newBuilder()
                 .setMessage("Set query is not supported by the fields '$fieldName' of type '$dataType'.")
-                .setDetails("field_name='$fieldName',expected_data_type='$dataType'")
-                .setStatus(OperationStatus.FAILURE)
+                .addKeyValue(FIELD_NAME, fieldName)
+                .addKeyValue(EXPECTED_DATA_TYPE, dataType)
+                .setFailureStatus()
                 .build()
     }
 
     fun exactQueryNotSupported(fieldName: String, dataType: String): OperationMessage {
         return OperationMessage.newBuilder()
                 .setMessage("Exact query is not supported by the fields '$fieldName' of type '$dataType'.")
-                .setDetails("field_name='$fieldName',expected_data_type='$dataType'")
-                .setStatus(OperationStatus.FAILURE)
+                .addKeyValue(FIELD_NAME, fieldName)
+                .addKeyValue(EXPECTED_DATA_TYPE, dataType)
+                .setFailureStatus()
                 .build()
     }
 
     fun analyzerNotFound(analyzerName: String): OperationMessage {
         return OperationMessage.newBuilder()
                 .setMessage("Analyzer not found: '$analyzerName'.")
-                .setDetails("analyzer_name='$analyzerName'")
-                .setStatus(OperationStatus.FAILURE)
+                .addKeyValue(ANALYZER_NAME, analyzerName)
+                .setFailureStatus()
                 .build()
     }
 
     fun fieldIsMandatory(fieldName: String): OperationMessage {
         return OperationMessage.newBuilder()
                 .setMessage("Field:'$fieldName' is mandatory.")
-                .setDetails("field_name='$fieldName'")
-                .setStatus(OperationStatus.FAILURE)
+                .addKeyValue(FIELD_NAME, fieldName)
+                .setFailureStatus()
                 .build()
     }
 
@@ -79,8 +82,9 @@ object Message {
         return OperationMessage.newBuilder()
                 .setMessage(
                         "Document with id: $id already exists. Optimistic update failed.")
-                .setDetails("id='$id',expected_id='0'")
-                .setStatus(OperationStatus.FAILURE)
+                .addKeyValue(ID, id)
+                .addKeyValue(EXPECTED_ID, 0)
+                .setFailureStatus()
                 .build()
     }
 
@@ -88,8 +92,8 @@ object Message {
         return OperationMessage.newBuilder()
                 .setMessage(
                         "Document with id: $id does not exists.")
-                .setDetails("id='$id'")
-                .setStatus(OperationStatus.FAILURE)
+                .addKeyValue(ID, id)
+                .setFailureStatus()
                 .build()
     }
 
@@ -97,9 +101,10 @@ object Message {
         return OperationMessage.newBuilder()
                 .setMessage(
                         "Indexing version conflict, id: $id with modifyIndex: $modifyIndex does not match the current modifyIndex: $existingVersion. Optimistic update failed.")
-                .setDetails(
-                        "id='$id',modify_index='$modifyIndex',existing_index='$existingVersion'")
-                .setStatus(OperationStatus.FAILURE)
+                .addKeyValue(ID, id)
+                .addKeyValue(MODIFY_INDEX, modifyIndex)
+                .addKeyValue(CURRENT_INDEX, existingVersion)
+                .setFailureStatus()
                 .build()
     }
 }

@@ -26,7 +26,8 @@ fun Tokenizer.validate() {
     check(checkTokenizerExists(this.tokenizerName), {
         OperationMessage.newBuilder()
                 .setMessage("Tokenizer: '${this.tokenizerName}' not found.")
-                .setDetails("tokenizer_name='${this.tokenizerName}'")
+                .addKeyValue(TOKENIZER_NAME, this.tokenizerName)
+                .setFailureStatus()
                 .build()
     })
 }
@@ -36,7 +37,8 @@ fun Filter.validate() {
     check(checkFilterExists(this.filterName), {
         OperationMessage.newBuilder()
                 .setMessage("Filter: '${this.filterName}' not found.")
-                .setDetails("filter_name='${this.filterName}'")
+                .addKeyValue(FILTER_NAME, this.filterName)
+                .setFailureStatus()
                 .build()
     })
 }

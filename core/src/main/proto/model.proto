@@ -58,15 +58,21 @@ enum OperationStatus {
     FAILURE = 1;
 }
 
+message KeyValue {
+    string key = 1;
+    string value = 2;
+}
+
 // Represents an operational message returned from the operation. This can be used to
 // represent both success and failure messages.
 message OperationMessage {
     // The actual message returned by the operation.
     string message = 1;
 
-    // Key value pair in key='value' format which can be easily parsed by the caller.
-    // The values will be separated by a comma.
-    string details = 2;
+    // Details of the operation as key value pairs. This is more efficient that using
+    // a map as we don't care about the retrieval speed. We don't have to pay the cost
+    // of repeated hashing and will be more memory efficient.
+    repeated KeyValue details = 2;
 
     // Operation Code associated with the message.
     OperationStatus status = 3;
