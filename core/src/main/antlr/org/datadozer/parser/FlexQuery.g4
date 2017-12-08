@@ -12,21 +12,24 @@ statement
 Simple clauses which can contain multiple values
 */
 query
-    : occur=(PLUS|MINUS)? fieldName=ID? COLON queryName=ID
+    : occur=(PLUS|MINUS)? fieldName=FIELD_NAME? COLON queryName=QUERY_NAME
         BRACE_OPEN
-            value (COMMA value)* (COMMA properties)?
-        BRACE_CLOSE
+            value (COMMA value)*
+        BRACE_CLOSE property*
     ;
 
 /*
 In group clause the field name is optional as you can get it from the
 name of the group.
+[fieldname:queryname] {
+    query or groups
+}
 */
 group
-    : (SQUARE_OPEN groupName=ID (COLON groupQuery=ID)? SQUARE_CLOSE)?
+    :  occur=(PLUS|MINUS)? (SQUARE_OPEN FIELD_NAME (COLON GROUP_QUERY_NAME)? SQUARE_CLOSE)?
         CURLY_OPEN
-            (query | group)+ properties?
-        CURLY_CLOSE;
+            (query | group)+
+        CURLY_CLOSE property*;
 
 value
     : occur=(PLUS|MINUS)?
@@ -37,14 +40,17 @@ value
         | TRUE
         | FALSE
         )
-      properties?
+      property*
     ;
 
 property
-    : ID propertyName=EQ propertyValue=(NUMBER | STRING);
+    : POWER NUMBER
+    | TILDE NUMBER
+    | EQ NUMBER
+    | PIPE propertyName=PROPERTY_NAME EQ propertyValue=(NUMBER | STRING);
 
 properties
-    : SQUARE_OPEN property (COMMA property)* SQUARE_CLOSE;
+    : property*;
 
 // LEXER
 /**
@@ -55,6 +61,7 @@ should be above rules like ID.
 
 // Separators
 COMMA           : ',';
+DOT             : '.';
 BRACE_OPEN      : '(';
 BRACE_CLOSE     : ')';
 CURLY_OPEN      : '{';
@@ -63,18 +70,49 @@ SQUARE_OPEN     : '[';
 SQUARE_CLOSE    : ']';
 PLUS            : '+';
 MINUS           : '-';
+TILDE           : '~';
 AT              : '@';
 COLON           : ':';
 EQ              : '=';
+POWER           : '^';
+PIPE            : '|';
 
 // Keywords
 TRUE            : 'true';
 FALSE           : 'false';
 
-ID              : [a-z_]+ ;             // match lower-case identifiers
+QUERY_NAME
+    : 'ordered'
+    | 'term'
+    ;
+
+GROUP_QUERY_NAME
+    : 'span_near'
+    | 'span_or'
+    ;
+
+PROPERTY_NAME
+    : 'startat'
+    | 'endat'
+    | 'ordered'
+    | 'unordered'
+    | 'slop'
+    | 'boost'
+    | 'noscore'
+    | 'score'
+    | 'spanquery'
+    | 'defaultfield'
+    | 'matchall'
+    | 'matchnone'
+    | 'matchdefault'
+    | 'fallback'
+    ;
+
+FIELD_NAME      : ID ;
+
 WS              : [ \t\r\n]+ -> skip ;  // skip spaces, tabs, newlines
 
-STRING          : '\'' (ESC|.)*? '\'';
+STRING          : '\'' ('\\\''|.)*? '\'';
 NUMBER          : DIGIT+;
 
 FLOAT           : DIGIT+ '.' DIGIT*   // match 1.39
@@ -85,5 +123,4 @@ fragment
 DIGIT           : '0' .. '9';
 
 fragment
-ESC             : '\\\'' | '\\\\';
-
+ID              : [a-z_]+ ; // match lower-case identifiers

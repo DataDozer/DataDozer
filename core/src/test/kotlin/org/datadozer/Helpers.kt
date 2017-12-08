@@ -1,6 +1,7 @@
 package org.datadozer
 
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.function.Executable
 
 /*
@@ -38,4 +39,12 @@ fun execT(assertion: () -> Unit): Executable {
             assertion()
         })
     }
+}
+
+fun assertEqualsIgnoreNewlineStyle(s1: String?, s2: String?, message: String) {
+    assertEquals(true, s1 != null && s2 != null && normalizeLineEnds(s1) == normalizeLineEnds(s2), message)
+}
+
+private fun normalizeLineEnds(s: String): String {
+    return s.replace("\r\n", "\n").replace('\r', '\n')
 }
