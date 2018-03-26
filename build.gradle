@@ -1,8 +1,8 @@
 buildscript {
     // Versions of dependencies which are used multiple times
     ext {
-        kotlin_compiler = '1.2.0'
-        lucene = "6.6.1"
+        kotlin_compiler = '1.2.10'
+        lucene = "7.1.0"
         log4j = '2.8.2'
         junit = '5.0.0'
         junit_runner = '1.0.0'

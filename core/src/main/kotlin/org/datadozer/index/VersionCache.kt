@@ -107,7 +107,7 @@ class VersionCache(private val shardWriter: ShardWriter)
             if (termEnum.seekExact(term.bytes())) {
                 val docEnums = termEnum.postings(null, 0)
                 val nDocs = reader.getNumericDocValues(modifyIndexFieldName)
-                return nDocs.get(docEnums.docID())
+                return nDocs.advance(docEnums.docID()).toLong()
             }
         }
 

@@ -91,7 +91,7 @@ class TransactionLogTests {
         val tr = TransactionReader(1, path.toAbsolutePath().toString())
         for (t in tr.replayTransactionsByIndex(1)) {
             val data = tr.getDataForEntry(t)
-            assertEquals(txId.toString(), data.id)
+            assertEquals(txId, data.id.longValue)
             assertEquals("index1", data.indexName)
             txId++
         }

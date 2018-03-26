@@ -42,6 +42,7 @@ dependencies {
     compile "org.apache.lucene:lucene-spatial-extras:$lucene"
     compile "org.apache.lucene:lucene-spatial3d:$lucene"
     compile "org.apache.lucene:lucene-suggest:$lucene"
+    compile "org.apache.lucene:lucene-test-framework:$lucene"
 
     compile "com.google.api.grpc:proto-google-common-protos:0.1.9"
     compile "io.grpc:grpc-netty:$grpcVersion"

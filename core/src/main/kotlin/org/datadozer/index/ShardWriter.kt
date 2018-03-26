@@ -58,7 +58,7 @@ class ShardWriter(
                 val reader = l.reader()
                 val nDocs = reader.getNumericDocValues(ModifyIndex.INSTANCE.properties.defaultFieldName)
                 for (j in 0 until reader.maxDoc()) {
-                    max = Math.max(max, nDocs.get(j))
+                    max = Math.max(max, nDocs.advance(j).toLong())
                 }
             }
         }
